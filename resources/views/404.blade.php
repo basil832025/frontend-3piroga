@@ -1,6 +1,6 @@
 @extends(front_view('layouts.app'))
 
-@section('title', '404 — Сторінку не знайдено')
+@section('title', '404 — Сторінку не знайдено.')
 
 @section('content')
     <section class="relative "> {{-- безопасный отступ от хедера pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 lg:pb-24--}}
