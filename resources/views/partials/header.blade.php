@@ -55,9 +55,14 @@
                     <div class="absolute left-0 top-[calc(100%+6px)] z-50 w-64 rounded-xl border bg-white shadow-md p-2">
                         <ul class="space-y-1">
                             @foreach($phones as $phone)
+                                @php
+                                    $phone = is_array($phone)
+                                        ? $phone
+                                        : ['display' => (string) $phone, 'tel' => (string) $phone];
+                                @endphp
                                 <li>
                                     <a href="{{ $telHref($phone['display'] ?? $phone['tel'] ?? '') }}" class="flex items-center justify-between gap-2 px-3 py-2 rounded-lg hover:bg-gray-50">
-                                        <span class="text-sm">{{ $phone['display'] }}</span>
+                                        <span class="text-sm">{{ $phone['display'] ?? $phone['tel'] ?? '' }}</span>
                                         @if($headerPhonePrimary && ($phone['tel'] ?? '') === ($headerPhonePrimary['tel'] ?? ''))
                                             <span class="text-[#FF7500] text-xs">{{ st('header.phone.main','основний') }}</span>
                                         @endif
@@ -207,3 +212,4 @@
 </header>
 {{-- Меню --}}
 @include(front_view('partials.menu'))
+
