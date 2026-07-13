@@ -15,6 +15,7 @@ class FrontendThreePirogaServiceProvider extends ServiceProvider
         $viewPath = __DIR__ . '/../resources/views';
 
         View::addNamespace('front.3piroga', $viewPath);
+        View::addLocation($viewPath);
         Blade::anonymousComponentPath($viewPath . '/components');
         \Illuminate\Support\Facades\Route::middleware('web')->group(__DIR__ . '/../routes/web.php');
 
