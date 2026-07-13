@@ -351,7 +351,7 @@ document.addEventListener('alpine:init', () => {
         })();
     </script>
 
-    @vite(['resources/js/map-cart.js'])
+    @vite(['packages/frontend-3piroga/resources/js/map-cart.js'])
     @push('scripts')
         <script>
             // Используем относительный URL, чтобы на клон‑сайтах (test-домены, другие хостинги)
@@ -367,3 +367,4 @@ document.addEventListener('alpine:init', () => {
     @endpush
 
 @endpush
+

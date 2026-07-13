@@ -187,7 +187,7 @@
 
     @stack('head')
 
-    @vite(['resources/css/app.css','resources/js/app.js'])
+    @vite(['packages/frontend-3piroga/resources/css/app.css','packages/frontend-3piroga/resources/js/app.js'])
     <script>
         // Глобальная переменная для Google Maps API ключа
         window.GOOGLE_MAPS_API_KEY = '{{ config("services.google_maps.key") }}';
@@ -252,3 +252,4 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 </body>
 </html>
+

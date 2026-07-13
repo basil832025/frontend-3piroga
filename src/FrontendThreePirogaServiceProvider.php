@@ -11,6 +11,9 @@ class FrontendThreePirogaServiceProvider extends ServiceProvider
     {
         $this->app['view']->addLocation(__DIR__ . '/../resources/views');
         Blade::anonymousComponentPath(__DIR__ . '/../resources/views/front/3piroga/components');
+
+        $this->publishes([
+            __DIR__ . '/../public' => public_path(),
+        ], 'frontend-3piroga-assets');
     }
 }
-

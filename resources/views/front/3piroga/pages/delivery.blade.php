@@ -305,7 +305,7 @@
         // Debug logging removed for production
     </script>
     {{-- твой JS с полигонами/логикой --}}
-    @vite(['resources/js/map-cart.js'])
+    @vite(['packages/frontend-3piroga/resources/js/map-cart.js'])
 
     {{-- Google Maps + Places + Geometry (callback обязательный) --}}
     <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.key') }}&libraries=places,geometry&callback=initMap" defer></script>
@@ -324,3 +324,4 @@
         }
     </script>
 @endpush
+
