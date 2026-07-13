@@ -14,6 +14,7 @@ class FrontendThreePirogaServiceProvider extends ServiceProvider
 
         View::addNamespace('front.3piroga', $viewPath);
         Blade::anonymousComponentPath($viewPath . '/components');
+        $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
 
         $this->publishes([
             __DIR__ . '/../public' => public_path(),
