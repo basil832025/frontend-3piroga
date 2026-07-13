@@ -30,9 +30,13 @@
 
                 {{-- PHONE DROPDOWN --}}
                 @php
-                    $activePhone = $headerPhonePrimary['display'] ?? config('phones.default');
-                    $phones =  $headerPhones ?? config('phones.list', []);
-                    $telHref = fn($p) => 'tel:' . preg_replace('/[^\d+]/', '', $p);
+                    $headerPhonePrimary = $headerPhonePrimary ?? null;
+                    $headerPhones = $headerPhones ?? config('phones.list', []);
+                    $phones = is_array($headerPhones) ? $headerPhones : [];
+                    $activePhone = is_array($headerPhonePrimary)
+                        ? ($headerPhonePrimary['display'] ?? $headerPhonePrimary['tel'] ?? config('phones.default'))
+                        : ($headerPhonePrimary ?: config('phones.default'));
+                    $telHref = fn($p) => 'tel:' . preg_replace('/[^\d+]/', '', (string) $p);
                 @endphp
                 <details
                     class="relative hidden md:block group"
@@ -212,4 +216,5 @@
 </header>
 {{-- Меню --}}
 @include(front_view('partials.menu'))
+
 
