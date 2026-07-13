@@ -1,0 +1,22 @@
+{
+    "name": "basil832025/frontend-3piroga",
+    "description": "Project frontend package for 3piroga.",
+    "type": "library",
+    "version": "dev-main",
+    "license": "proprietary",
+    "autoload": {
+        "psr-4": {
+            "Basil832025\\FrontendThreePiroga\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Basil832025\\FrontendThreePiroga\\FrontendThreePirogaServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
+
