@@ -10,6 +10,8 @@ class FrontendThreePirogaServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
+        require_once __DIR__ . '/helpers.php';
+
         $viewPath = __DIR__ . '/../resources/views';
 
         View::addNamespace('front.3piroga', $viewPath);
