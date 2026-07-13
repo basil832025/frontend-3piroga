@@ -10,7 +10,7 @@
 'isFavorite' => false,
 
 'price_no_sale' => null,
-'image' => '/images/no-image.svg',
+'image' => '/vendor/frontend-3piroga/images/no-image.svg',
 'characteristics' => [],
 'rows' => [],
 ])

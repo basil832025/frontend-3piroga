@@ -19,7 +19,7 @@
                 <div class="md:hidden px-6 pt-6">
                     <div class="h-[180px] w-full overflow-hidden rounded-[20px] bg-[#F6E6C6]">
                         <img
-                            src="{{ asset('images/svg/auth_right.png') }}"
+                            src="{{ asset('vendor/frontend-3piroga/images/svg/auth_right.png') }}"
                             alt=""
                             class="h-full w-full object-cover"
                             draggable="false"
@@ -31,7 +31,7 @@
                 <div class="hidden md:flex w-full h-full max-w-[680px] pr-[48px] pt-[32px] pb-[32px] lg:w-[660px]">
                     <div class="w-full flex-1 overflow-hidden rounded-[32px] bg-[#F6E6C6]">
                         <img
-                            src="{{ asset('images/svg/auth_right.png') }}"
+                            src="{{ asset('vendor/frontend-3piroga/images/svg/auth_right.png') }}"
                             alt=""
                             class="h-full w-full object-cover"
                             draggable="false"
@@ -46,9 +46,9 @@
             {{-- Логотип и текст сверху --}}
             <div class="mb-4 md:mb-8">
                 <div class="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
-                    <img src="{{ asset('images/logo.svg') }}" alt="{{ st('header.logo_alt', 'Три пироги') }}" class="h-8 md:h-12 w-auto">
+                    <img src="{{ asset('vendor/frontend-3piroga/images/logo.svg') }}" alt="{{ st('header.logo_alt', 'Три пироги') }}" class="h-8 md:h-12 w-auto">
                         <span class="inline-flex items-center gap-1 md:gap-2 text-xs md:text-sm">
-                            <img src="{{ asset('images/fire.svg') }}" class="w-4 h-4 md:w-5 md:h-5 mx-auto" alt="">
+                            <img src="{{ asset('vendor/frontend-3piroga/images/fire.svg') }}" class="w-4 h-4 md:w-5 md:h-5 mx-auto" alt="">
                             {{ st('header.wood-fired',"Готуємо в дров'яній печі!") }}
                         </span>
                 </div>

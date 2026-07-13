@@ -15,15 +15,15 @@
                         @click="$dispatch('open-mobile-menu')"
                         class="inline-flex items-center justify-center w-6 h-10 rounded-lg hover:bg-gray-100"
                         aria-label="Меню">
-                    <img src="{{ asset('images/menu.svg') }}" class="w-6 h-6" alt="">
+                    <img src="{{ asset('vendor/frontend-3piroga/images/menu.svg') }}" class="w-6 h-6" alt="">
                 </button>
 
                 {{-- logo --}}
                 <a href="{{ in_array($locale ?? app()->getLocale(), ['ru', 'en'], true) ? route('localized.home', ['locale' => ($locale ?? app()->getLocale())]) : route('home') }}" class="-ml-[4px] block md:ml-0 md:gap-2 desk:gap-6" aria-label="Три Пироги — на главную">
                     <picture>
-                        <source media="(min-width: 1250px)" srcset="{{ asset('images/logo.svg') }}">
-                        <source media="(min-width: 768px)" srcset="{{ asset('images/logo_m.svg') }}">
-                        <img src="{{ asset('images/logo_m.svg') }}" alt="Три Пироги" decoding="async"
+                        <source media="(min-width: 1250px)" srcset="{{ asset('vendor/frontend-3piroga/images/logo.svg') }}">
+                        <source media="(min-width: 768px)" srcset="{{ asset('vendor/frontend-3piroga/images/logo_m.svg') }}">
+                        <img src="{{ asset('vendor/frontend-3piroga/images/logo_m.svg') }}" alt="Три Пироги" decoding="async"
                              class="shrink-0 flex-none basis-[52px] md:basis-[57px] max-w-none object-contain" fetchpriority="high">
                     </picture>
                 </a>
@@ -122,7 +122,7 @@
                     class="hidden desk:flex items-center ml-[100px] font-normal text-[13px] leading-4 text-[#19191A]"
                 >
                     <span class="inline-flex items-center gap-2">
-                        <img src="{{ asset('images/fire.svg') }}" class="w-5 h-5 mx-auto" alt="">
+                        <img src="{{ asset('vendor/frontend-3piroga/images/fire.svg') }}" class="w-5 h-5 mx-auto" alt="">
                         {{ st('header.wood-fired', "Готуємо в дров'яній печі!") }}
                     </span>
                 </div>

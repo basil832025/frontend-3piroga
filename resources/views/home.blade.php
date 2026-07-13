@@ -24,7 +24,7 @@
                 @click="filterOpen = true"
                 class="w-10 md:w-[132px] h-10 rounded-[12px] border border-[#E5E7EB] bg-white
                        px-3 inline-flex items-center gap-2 justify-center">
-            <img src="{{ asset('images/filter.svg') }}" alt="" class="w-[22px] h-[19px]" aria-hidden="true">
+            <img src="{{ asset('vendor/frontend-3piroga/images/filter.svg') }}" alt="" class="w-[22px] h-[19px]" aria-hidden="true">
             <span class="hidden md:block font-bold text-[16px] leading-none text-[#19191A]">
               {{ st('all.filter','Фільтр.  ') }}
             </span>
@@ -64,7 +64,7 @@
         </section>
         {{-- статья на главной --}}
         @php
-            $homeBlogImage = $homeBlog?->preview_image_url ?? '/images/products/home.png';
+            $homeBlogImage = $homeBlog?->preview_image_url ?? '/vendor/frontend-3piroga/images/products/home.png';
             $homeBlogTitle = $homeBlog?->title ?? 'Осетинські пироги у Києві';
             $homeBlogAnons = $homeBlog?->anons
                 ? \Illuminate\Support\Str::limit(trim(strip_tags(html_entity_decode((string) $homeBlog->anons, ENT_QUOTES | ENT_HTML5, 'UTF-8'))), 360)

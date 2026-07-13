@@ -48,7 +48,7 @@
             {{-- шапка --}}
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-2">
-                    <img src="{{ asset('images/filter.svg') }}" class="w-6 h-6" alt="">
+                    <img src="{{ asset('vendor/frontend-3piroga/images/filter.svg') }}" class="w-6 h-6" alt="">
                     <span class="font-bold text-lg text-[#19191A]"> {{ st('all.filter','Фільтр') }}</span>
                 </div>
 

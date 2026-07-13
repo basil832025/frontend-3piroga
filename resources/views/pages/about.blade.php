@@ -65,7 +65,7 @@
             p-6 md:p-8
       w-[355px] h-[286px] md:h-[300px] lg:w-[281px] lg:h-[322px]
                 shadow-sm">
-                    <img src="/images/svg/chef.svg" alt="" class="mb-4 w-[120px]">
+                    <img src="/vendor/frontend-3piroga/images/svg/chef.svg" alt="" class="mb-4 w-[120px]">
                     <h2 class="text-[40px] font-bold">{{page_field('about', 'about_15','15 років+') }}</h2>
                     <div class="text-[26px] font-bold leading-[32px] text-[#19191A]">{{page_field('about', 'about_15_txt','З любов’ю пироги') }}</div>
 
@@ -84,7 +84,7 @@
             p-6 md:p-8
     w-[355px] h-[286px] md:h-[300px] lg:w-[281px] lg:h-[322px]
                   shadow-sm">
-                    <img src="/images/svg/pie.svg" alt="" class="mb-4 w-[120px]">
+                    <img src="/vendor/frontend-3piroga/images/svg/pie.svg" alt="" class="mb-4 w-[120px]">
                     <h2 class="text-[40px] font-bold">{{page_field('about', 'about_8000','15 років+') }}</h2>
                     <div class="text-[26px] font-bold leading-[32px] text-[#19191A]">{{page_field('about', 'about_8000_txt','З любов’ю пироги') }}</div>
 
@@ -96,7 +96,7 @@
             p-6 md:p-8
       w-[355px] h-[286px] md:h-[300px] lg:w-[281px] lg:h-[322px]
                 shadow-sm">
-                    <img src="/images/svg/star.svg" alt="" class="mb-4 w-[120px]">
+                    <img src="/vendor/frontend-3piroga/images/svg/star.svg" alt="" class="mb-4 w-[120px]">
                     <h2 class="text-[40px] font-bold">{{page_field('about', 'about_4_7stars','4,7 зірок') }}</h2>
                     <div class="text-[26px] font-bold leading-[32px] text-[#19191A]">{{page_field('about', 'about_4_7stars_txt','Середня оцінка клієнтів') }}</div>
 
@@ -108,7 +108,7 @@
             p-6 md:p-8
           w-[355px] h-[286px] md:h-[300px] lg:w-[281px] lg:h-[322px]
               shadow-sm">
-                    <img src="/images/svg/plate.svg" alt="" class="mb-4 w-[120px]">
+                    <img src="/vendor/frontend-3piroga/images/svg/plate.svg" alt="" class="mb-4 w-[120px]">
                     <h2 class="text-[40px] font-bold">{{page_field('about', 'about_repeat','4,7 зірок') }}</h2>
                     <div class="text-[26px] font-bold leading-[32px] text-[#19191A]">{{page_field('about', 'about_repeat_txt','Середня оцінка клієнтів') }}</div>
 

@@ -383,8 +383,8 @@
     </div>
 
 <!-- <div class="flex items-center justify-center gap-3">
-            <a href="{{ route('auth.redirect','apple') }}"><img src="/images/svg/apple.svg" class="w-10 h-10" alt=""></a>
-            <a href="{{ route('auth.redirect','facebook') }}"><img src="/images/svg/facebook.svg" class="w-10 h-10" alt=""></a>
-            <a href="{{ route('auth.redirect','google') }}"><img src="/images/svg/google.svg" class="w-10 h-10" alt=""></a>
+            <a href="{{ route('auth.redirect','apple') }}"><img src="/vendor/frontend-3piroga/images/svg/apple.svg" class="w-10 h-10" alt=""></a>
+            <a href="{{ route('auth.redirect','facebook') }}"><img src="/vendor/frontend-3piroga/images/svg/facebook.svg" class="w-10 h-10" alt=""></a>
+            <a href="{{ route('auth.redirect','google') }}"><img src="/vendor/frontend-3piroga/images/svg/google.svg" class="w-10 h-10" alt=""></a>
         </div>-->
 </div>

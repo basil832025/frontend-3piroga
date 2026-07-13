@@ -37,7 +37,7 @@
                 :price="$p['price'] ?? '0.00'"
                 :description="$p['card_description'] ?? ($p['description'] ?? '')"
                 :price_no_sale="$p['old_price'] ?? $p['price_no_sale'] ?? null"
-                :image="$p['main_image'] ?? '/images/no-image.svg'"
+                :image="$p['main_image'] ?? '/vendor/frontend-3piroga/images/no-image.svg'"
                 :characteristics="$p['characteristics'] ?? []"   {{-- 👈 добавили --}}
                 :rows="$p['variant_rows'] ?? []"
                 :root_id="$p['root_id'] ?? null"   {{-- 👈 --}}

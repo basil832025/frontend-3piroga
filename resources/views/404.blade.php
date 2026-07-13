@@ -22,7 +22,7 @@
 
                     {{-- Пиріг — центр, размер по брейкпоинтам; под хедер не залезет, т.к. нет отрицательных маржинов --}}
                     <img
-                        src="{{ asset('images/404.png') }}"
+                        src="{{ asset('vendor/frontend-3piroga/images/404.png') }}"
                         alt="Пиріг"
                         class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[27%] z-20
                  h-auto object-contain

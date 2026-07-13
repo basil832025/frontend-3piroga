@@ -1,7 +1,7 @@
 <x-mail::message>
 <x-slot name="header">
 <x-mail::header :url="config('app.url')">
-<img src="{{ asset('images/logo.svg') }}" alt="{{ st('header.logo_alt', 'Три пироги') }}" style="max-height: 56px; width: auto;">
+<img src="{{ asset('vendor/frontend-3piroga/images/logo.svg') }}" alt="{{ st('header.logo_alt', 'Три пироги') }}" style="max-height: 56px; width: auto;">
 </x-mail::header>
 </x-slot>
 

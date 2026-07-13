@@ -43,7 +43,7 @@
             @foreach ($items as $it)
                 @php
                     $pid   = (int) data_get($it, 'product_id');
-                    $img   = data_get($it, 'image', asset('images/noimg.png'));
+                    $img   = data_get($it, 'image', asset('vendor/frontend-3piroga/images/noimg.png'));
                     $name  = data_get($it, 'name', st('cart.item.default_name', 'Товар'));
                     $sku   = data_get($it, 'sku');
                     $code2 = data_get($it, 'code2');

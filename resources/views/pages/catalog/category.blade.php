@@ -126,7 +126,7 @@
                     @click="filterOpen = true"
                     class="w-10 md:w-[132px] h-10 rounded-[12px] border border-[#E5E7EB] bg-white
                        px-3 inline-flex items-center gap-2 justify-center">
-                <img src="{{ asset('images/filter.svg') }}" alt="" class="w-[22px] h-[19px]" aria-hidden="true">
+                <img src="{{ asset('vendor/frontend-3piroga/images/filter.svg') }}" alt="" class="w-[22px] h-[19px]" aria-hidden="true">
                 <span class="hidden md:block font-bold text-[16px] leading-none text-[#19191A]">
                  {{ st('all.filter','Фільтр') }}
             </span>
@@ -157,7 +157,7 @@
                             :price="$p['price'] ?? '0.00'"
                             :description="$p['card_description'] ?? ($p['description'] ?? '')"
                             :price_no_sale="$p['old_price'] ?? $p['price_no_sale'] ?? null"
-                            :image="$p['main_image'] ?? '/images/no-image.svg'"
+                            :image="$p['main_image'] ?? '/vendor/frontend-3piroga/images/no-image.svg'"
                             :characteristics="$p['characteristics'] ?? []"
                             :rows="$p['variant_rows'] ?? []"
                             :root_id="$p['root_id'] ?? null"

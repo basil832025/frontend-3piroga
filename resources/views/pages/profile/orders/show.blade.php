@@ -174,7 +174,7 @@
                                           ?? $product->main_image_url
                                           ?? $product->image_url;
                                 }
-                                $image = $image ?? asset('images/placeholder-4x3.jpg');
+                                $image = $image ?? asset('vendor/frontend-3piroga/images/placeholder-4x3.jpg');
                                 
                                 $qty = (int)($item->qty ?? 1);
                                 $price = (float)($item->unit_price ?? 0);

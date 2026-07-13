@@ -16,7 +16,7 @@
 
     $restaurantName = st('all.try-pyroha', 'Три пироги');
 
-    $logoUrl = asset('images/logo-footer.png');
+    $logoUrl = asset('vendor/frontend-3piroga/images/logo-footer.png');
 
     $sameAs = array_values(array_filter([
         'https://www.facebook.com/3piroga.ua',

@@ -60,7 +60,7 @@
                                 </a>
                             @endif
                         </div>
-                        <img src="/images/logo_mob.svg" class="w-10 h-10" alt="logo">
+                        <img src="/vendor/frontend-3piroga/images/logo_mob.svg" class="w-10 h-10" alt="logo">
                     </div>
 
                     @if($phones->isNotEmpty())

@@ -102,7 +102,7 @@
         <div class="relative w-full mx-auto" style="width: {{ $maxWidth }};">
             <form action="{{ $action }}" method="get">
                 <div class="flex items-center gap-2 ring-1 ring-black/10 rounded-[4px] h-10 px-3 bg-white">
-                    <img src="{{ asset('images/search.svg') }}" class="w-5 h-5" alt="">
+                    <img src="{{ asset('vendor/frontend-3piroga/images/search.svg') }}" class="w-5 h-5" alt="">
                     <input x-ref="dInput" x-model="$store.search.q" type="text" name="q"
                            placeholder="{{ $placeholder }}" autocomplete="off"
                            class="w-full bg-transparent outline-none text-base"
@@ -187,7 +187,7 @@
         <div class="relative mx-auto w-full max-w-[736px] px-4 pt-4" @click.stop>
             <form action="{{ $action }}" method="get"
                   class="h-11 rounded-[4px] ring-1 ring-black/10 bg-white flex items-center gap-2 px-3 shadow-sm">
-                <img src="{{ asset('images/search.svg') }}" class="w-5 h-5" alt="">
+                <img src="{{ asset('vendor/frontend-3piroga/images/search.svg') }}" class="w-5 h-5" alt="">
                 <input x-ref="mInput" x-model="$store.search.q" type="text" name="q" autocomplete="off"
                        placeholder="{{ $placeholder }}"
                        class="w-full bg-transparent outline-none text-base"

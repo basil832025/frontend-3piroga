@@ -101,10 +101,10 @@
                 <input type="radio" name="payment_method" value="payparts" class="tp-radio" x-model="paymentMethod" @checked($paymentMethod === 'payparts')>
                 <span class="flex items-center gap-3 text-[16px] leading-[22px] text-[#272828]">
                     <span class="text-[#FF7500]" aria-hidden="true">
-                        <img src="{{ asset('images/svg/pie_icon_from_image.svg') }}?v=3" width="25" height="25" class="block bg-transparent" alt="">
+                        <img src="{{ asset('vendor/frontend-3piroga/images/svg/pie_icon_from_image.svg') }}?v=3" width="25" height="25" class="block bg-transparent" alt="">
                     </span>
                     {{ st('cart.payment.payparts_type_pp', 'Оплата частинами') }}
-                    <img src="{{ asset('images/payments/payparts-badge.png') }}" width="46" height="25" class="block shrink-0" alt="" aria-hidden="true">
+                    <img src="{{ asset('vendor/frontend-3piroga/images/payments/payparts-badge.png') }}" width="46" height="25" class="block shrink-0" alt="" aria-hidden="true">
                 </span>
             </label>
 

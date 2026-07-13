@@ -141,7 +141,7 @@
             {{-- строка: логотип+лозунг слева | соцсети справа --}}
             <div class="py-8 flex flex-col gap-6 md:flex-row md:items-center justify-between">
                 <div class=" flex items-start gap-4 desk:w-[498px] md:w-[419px]">
-                    <img src="/images/logo-footer.png" alt="Три Пироги" class="w-14 h-14">
+                    <img src="/vendor/frontend-3piroga/images/logo-footer.png" alt="Три Пироги" class="w-14 h-14">
                     <p class="text-[#666666] text-[13px] leading-snug">
                         Мережа пекарень "ТРИ ПИРОГИ"  <span class="emoji">&#x2668;&#xFE0F;&#x2668;&#xFE0F;&#x2668;&#xFE0F;</span> - єдина у Києві, де печуть справжні осетинські пироги з пилу, з жару, в дров`яній печі
                     </p>
@@ -174,8 +174,8 @@
             <div class="py-6 flex flex-col md:flex-row md:items-center md:justify-left gap-4">
                 <p class="text-[14px] text-[#A9A9A9]">© ТРИ ПИРОГИ. Усі права захищені</p>
                 <div class="flex items-center gap-6">
-                    <img src="/images/payments/mastercard.png" alt="Mastercard" class="h-5">
-                    <img src="/images/payments/visa.png" alt="VISA" class="h-5">
+                    <img src="/vendor/frontend-3piroga/images/payments/mastercard.png" alt="Mastercard" class="h-5">
+                    <img src="/vendor/frontend-3piroga/images/payments/visa.png" alt="VISA" class="h-5">
                 </div>
             </div>
 

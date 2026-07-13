@@ -112,7 +112,7 @@
                                     <div class="text-[10px] text-[#9E9E9E] truncate">{{ data_get($headerLocation ?? null, 'address', '') }}</div>
                                 </div>
                                 <div>
-                                    <img src="/images/logo_mob.svg" class="w-10 h-10" alt="">
+                                    <img src="/vendor/frontend-3piroga/images/logo_mob.svg" class="w-10 h-10" alt="">
                                 </div>
                             </div>
 
@@ -167,7 +167,7 @@
 
                     <div class="flex justify-between  w-full">
                         <h5 class="font-semibold text-lg text-[#666666] mb-1">{{page_field('delivery', 'delivery_cash','') }}</h5>
-                        <img src="/images/svg/pay-cash.svg" alt="" class="w-6 h-6 shrink-0">
+                        <img src="/vendor/frontend-3piroga/images/svg/pay-cash.svg" alt="" class="w-6 h-6 shrink-0">
                     </div>
                     <p class="text-[#9E9E9E] leading-4 text-sm  mt-3">
                         {{page_field('delivery', 'delivery_payincash','') }}
@@ -181,7 +181,7 @@
 
                     <div class="flex justify-between w-full">
                         <h5 class="font-semibold text-lg text-[#666666] mb-1">{{page_field('delivery', 'delivery_By_bank_card_online','') }}</h5>
-                        <img src="/images/svg/pay-card-online.svg" alt="" class="w-6 h-6 shrink-0">
+                        <img src="/vendor/frontend-3piroga/images/svg/pay-card-online.svg" alt="" class="w-6 h-6 shrink-0">
                     </div>
 
                     <p class="text-[#9E9E9E] leading-4 text-sm  mt-3">
@@ -195,7 +195,7 @@
 
                     <div class="flex justify-between  w-full">
                         <h5 class="font-semibold text-lg text-[#666666] leading-[100%] mb-1">{{page_field('delivery', 'delivery_By_bank_card','') }}</h5>
-                        <img src="/images/svg/pay-card-pos.svg" alt="" class="w-6 h-6 shrink-0">
+                        <img src="/vendor/frontend-3piroga/images/svg/pay-card-pos.svg" alt="" class="w-6 h-6 shrink-0">
                     </div>
                     <p class="text-[#9E9E9E] leading-4 text-sm mt-3">
                         {{page_field('delivery', 'delivery_Payforyour_order_by_bank','') }}
@@ -217,7 +217,7 @@
 
                     <div class="flex  justify-between  w-full">
                         <h5 class="font-semibold text-lg text-[#666666] mb-1">{{page_field('delivery', 'Delivery_Delivery','') }}</h5>
-                        <img src="/images/svg/delivery.svg" alt="" class="w-6 h-6 shrink-0">
+                        <img src="/vendor/frontend-3piroga/images/svg/delivery.svg" alt="" class="w-6 h-6 shrink-0">
                     </div>
                     <p class="text-[#9E9E9E] leading-4 text-sm  mt-3">
                         {{page_field('delivery', 'Delivery_Order_in_any_convenient','') }}
@@ -231,7 +231,7 @@
 
                     <div class="flex justify-between w-full ">
                         <h5 class="font-semibold text-lg text-[#666666] mb-1">{{page_field('delivery', 'Delivery_Pick_up_from','') }}</h5>
-                        <img src="/images/svg/pickup.svg" alt="" class="w-6 h-6 shrink-0">
+                        <img src="/vendor/frontend-3piroga/images/svg/pickup.svg" alt="" class="w-6 h-6 shrink-0">
                     </div>
                     <p class="text-[#9E9E9E] leading-4 text-sm  mt-3">
                         {{page_field('delivery', 'Delivery_Pick_up_your_order_at_the_selected','') }}
@@ -245,7 +245,7 @@
 
                     <div class="flex justify-between w-full ">
                         <h5 class="font-semibold text-lg text-[#666666] leading-[100%] mb-1">{{page_field('delivery', 'Delivery_at_a_specific_time','') }} </h5>
-                        <img src="/images/svg/time.svg" alt="" class="w-6 h-6 shrink-0">
+                        <img src="/vendor/frontend-3piroga/images/svg/time.svg" alt="" class="w-6 h-6 shrink-0">
                     </div>
                     <p class="text-[#9E9E9E] leading-4 text-sm  mt-3">
                         {{page_field('delivery', 'Delivery_Choose_by_a_specific_time','') }}

@@ -108,7 +108,7 @@
             <!-- Шапка меню -->
             <div class="flex items-center justify-between px-8 py-6">
                 <div class="flex items-center gap-3">
-                    <img src="{{ asset('images/logo.svg') }}" alt="Три пироги">
+                    <img src="{{ asset('vendor/frontend-3piroga/images/logo.svg') }}" alt="Три пироги">
 
                     {{-- Language switch (как в хидере) --}}
                     <div class="ml-2">

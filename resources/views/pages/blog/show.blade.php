@@ -45,7 +45,7 @@
     $seoKeywords = trim(html_entity_decode($seoKeywords, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
     $seoKeywords = trim(preg_replace('/\s+/u', ' ', strip_tags($seoKeywords)));
 
-    $hero = $post->detail_image_url ?? $post->preview_image_url ?? '/images/no-image.svg';
+    $hero = $post->detail_image_url ?? $post->preview_image_url ?? '/vendor/frontend-3piroga/images/no-image.svg';
 @endphp
 
 @section('title', $seoTitle)

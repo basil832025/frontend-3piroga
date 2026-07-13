@@ -7,7 +7,7 @@
     $title = $post->title;
     $rawExcerpt = html_entity_decode((string) ($post->anons ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
     $excerpt = trim(strip_tags($rawExcerpt));
-    $img = $post->detail_image_url ?? $post->preview_image_url ?? '/images/no-image.svg';
+    $img = $post->detail_image_url ?? $post->preview_image_url ?? '/vendor/frontend-3piroga/images/no-image.svg';
     $date = $post->published_at?->locale($locale)->isoFormat('D MMM YYYY');
     $cat  = $post->category->title ?? null;
 @endphp
