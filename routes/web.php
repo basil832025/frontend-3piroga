@@ -39,7 +39,6 @@ Route::get('/feeds/esputnik-products.xml', [FeedController::class, 'esputnikProd
 
 Route::get('/', [HomeController::class, 'index'])
     ->name('home')
-    ->defaults('page_cache_candidate', true)
     ->withoutMiddleware([VerifyCsrfToken::class]);
 Route::get('/cart', [CartController::class, 'page'])
     ->name('cart.page')
@@ -119,7 +118,7 @@ Route::get('/favorites/info', [FavoriteController::class, 'info'])
     ->defaults('guest_stateless', true)
     ->withoutMiddleware([VerifyCsrfToken::class]);
 
-Route::middleware(['web', 'auth'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/profile', function () {
         return view(front_view('pages.profile.index'), [
             'user' => auth()->user(),
@@ -172,16 +171,20 @@ Route::middleware(['web', 'auth'])->group(function () {
         ->name('profile.orders.repeat');
 });
 
-Route::middleware(['web'])->group(function () {
+Route::group([], function () {
     Route::redirect('/orders', '/profile/orders', 302)->name('orders.index');
     Route::redirect('/orders/history', '/profile/orders', 302)->name('orders.history');
     Route::redirect('/bonuses', '/profile/bonus', 302)->name('bonuses.index');
     Route::redirect('/addresses', '/profile/addresses', 302)->name('addresses.index');
     Route::redirect('/login', '/auth', 302)->name('login');
 
-    Route::middleware('guest')->group(function () {
-        Route::get('/auth', [ClientAuthController::class, 'show'])->name('auth.show');
+    Route::get('/auth', [ClientAuthController::class, 'show'])->name('auth.show');
+    Route::post('/auth/phone-sms/send-code', [ClientAuthController::class, 'loginPhoneSms'])
+        ->name('auth.phone-sms.send-code')->middleware('throttle:5,1');
+    Route::post('/auth/phone-sms/verify', [ClientAuthController::class, 'verifyPhoneSms'])
+        ->name('auth.phone-sms.verify')->middleware('throttle:10,1');
 
+    Route::middleware('guest')->group(function () {
         Route::get('/auth/redirect/{provider}', [ClientAuthController::class, 'redirect'])
             ->whereIn('provider', ['google', 'facebook', 'apple'])->name('auth.redirect');
 
@@ -190,11 +193,6 @@ Route::middleware(['web'])->group(function () {
 
         Route::post('/auth/register', [ClientAuthController::class, 'register'])->name('auth.register');
         Route::post('/auth/login', [ClientAuthController::class, 'login'])->name('auth.login');
-
-        Route::post('/auth/phone-sms/send-code', [ClientAuthController::class, 'loginPhoneSms'])
-            ->name('auth.phone-sms.send-code')->middleware('throttle:5,1');
-        Route::post('/auth/phone-sms/verify', [ClientAuthController::class, 'verifyPhoneSms'])
-            ->name('auth.phone-sms.verify')->middleware('throttle:10,1');
 
         Route::post('/auth/save-checkout-url', [ClientAuthController::class, 'saveCheckoutUrl'])
             ->name('auth.save-checkout-url');
@@ -255,7 +253,6 @@ Route::get('/pies', function () {
     return app(CatalogController::class)->show('pies');
 })
     ->name('catalog.index')
-    ->defaults('page_cache_candidate', true)
     ->withoutMiddleware([VerifyCsrfToken::class]);
 
 Route::get('/nas-blagodaryat', function () {

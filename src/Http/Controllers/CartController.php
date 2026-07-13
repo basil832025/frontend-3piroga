@@ -5,6 +5,7 @@ use App\Services\CartService;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Shop\Product;
+use App\Models\Shop\ProductCategory;
 use App\Support\Presenters\ProductCardPresenter;
 
 class CartController extends Controller
@@ -49,13 +50,8 @@ public function page()
 {
     $locale = app()->getLocale();
     $info = $this->cart->info();
-    $relatedQuery = Product::withListingCardRelations()
-        ->active()
-        ->cardListingSelect()
-        ->MainProduct()
-        ->hit()
-        ->orderBy('sort');
-    $related = (new ProductCardPresenter($locale, null, true))->collection($relatedQuery->get());
+    $relatedProducts = $this->relatedProductsForCart(['napitki', 'sousu-k-pirogam'], 3);
+    $related = (new ProductCardPresenter($locale, null, true))->collection($relatedProducts);
 
     return view(front_view('cart.index'), [
         'items' => $info['items'] ?? [],
@@ -63,6 +59,73 @@ public function page()
         'total' => (float)($info['total'] ?? $info['total_price'] ?? 0),
         'related' => $related,
     ]);
+}
+
+private function relatedProductsForCart(array $categorySlugs, int $limit)
+{
+    $picked = collect();
+
+    foreach ($categorySlugs as $slug) {
+        if ($picked->count() >= $limit) {
+            break;
+        }
+
+        $categoryIds = $this->relatedCategoryIds([$slug]);
+        if ($categoryIds === []) {
+            continue;
+        }
+
+        $product = $this->relatedProductsQuery($categoryIds)
+            ->when($picked->isNotEmpty(), fn ($query) => $query->whereNotIn('bs_products.id', $picked->pluck('id')->all()))
+            ->inRandomOrder()
+            ->first();
+
+        if ($product) {
+            $picked->push($product);
+        }
+    }
+
+    if ($picked->count() < $limit) {
+        $allCategoryIds = $this->relatedCategoryIds($categorySlugs);
+        $extra = $this->relatedProductsQuery($allCategoryIds)
+            ->when($picked->isNotEmpty(), fn ($query) => $query->whereNotIn('bs_products.id', $picked->pluck('id')->all()))
+            ->inRandomOrder()
+            ->limit($limit - $picked->count())
+            ->get();
+
+        $picked = $picked->merge($extra);
+    }
+
+    return $picked->values();
+}
+
+private function relatedProductsQuery(array $categoryIds)
+{
+    return Product::withListingCardRelations()
+        ->active()
+        ->cardListingSelect()
+        ->MainProduct()
+        ->where(function ($query) {
+            $query->whereNull('is_imported')
+                ->orWhere('is_imported', false);
+        })
+        ->where(function ($categoryQuery) use ($categoryIds) {
+            $categoryQuery
+                ->whereIn('category_id', $categoryIds)
+                ->orWhereHas('categories', fn ($categories) => $categories->whereIn('bs_product_categories.id', $categoryIds));
+        });
+}
+
+private function relatedCategoryIds(array $slugs): array
+{
+    return ProductCategory::query()
+        ->whereIn('slug', $slugs)
+        ->get()
+        ->flatMap(fn (ProductCategory $category) => array_merge([$category->id], $category->getDescendantIds()))
+        ->map(fn ($id) => (int) $id)
+        ->unique()
+        ->values()
+        ->all();
 }
 
 public function remove(Request $r)
