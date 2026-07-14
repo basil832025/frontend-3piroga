@@ -164,7 +164,7 @@
                             {{ st('auth.enter_last_4_digits', 'Введите последние 4 цифры входящего номера или код из SMS:') }}
                         </p>
                         <p class="text-xs md:text-base text-gray-600 mb-4 md:mb-6">
-                            {{ st('auth.to_number','На ваш номер') }} <span class="font-medium" x-text="sms.phoneFormatted || sms.phonePretty"></span> {{ st('auth.code_sent_valid_3min', 'отправлен код подтверждения. Срок действия вашего кода 3 минуты.') }}
+                            {{ st('auth.to_number','На ваш номер') }} <span class="text-sm md:text-lg lg:text-xl font-bold text-gray-700" x-text="sms.phoneFormatted || sms.phonePretty"></span> {{ st('auth.code_sent_valid_3min', 'отправлен код подтверждения. Срок действия вашего кода 3 минуты.') }}
                         </p>
                         <div class="flex gap-[10px] justify-center">
                             <template x-for="(digit, i) in otp" :key="i">

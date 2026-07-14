@@ -133,7 +133,7 @@
                                     {{ st('auth.enter_last_4_digits', 'Введите последние 4 цифры входящего номера или код из SMS:') }}
                                 </p>
                                 <p class="text-xs md:text-base text-gray-600 mb-4 md:mb-6">
-                                    {{ st('auth.to_number','На ваш номер') }} <span class="font-medium" x-text="sms.phoneFormatted || sms.phonePretty"></span> {{ st('auth.code_sent_valid_3min', 'отправлен код подтверждения. Срок действия вашего кода 3 минуты.') }}
+                                    {{ st('auth.to_number','На ваш номер') }} <span class="text-sm md:text-lg lg:text-xl font-bold text-gray-700" x-text="sms.phoneFormatted || sms.phonePretty"></span> {{ st('auth.code_sent_valid_3min', 'отправлен код подтверждения. Срок действия вашего кода 3 минуты.') }}
                                 </p>
                                 <div class="flex gap-[10px] justify-center">
                                     <template x-for="(digit, i) in otp" :key="i">
@@ -297,6 +297,21 @@
                     }
                 },
 
+                formatUaPhone(value) {
+                    const digits = String(value || '').replace(/\D/g, '');
+
+                    if (/^380\d{9}$/.test(digits)) {
+                        const operator = digits.substring(3, 5);
+                        const part1 = digits.substring(5, 8);
+                        const part2 = digits.substring(8, 10);
+                        const part3 = digits.substring(10, 12);
+
+                        return `+38 (0${operator}) ${part1}-${part2}-${part3}`;
+                    }
+
+                    return value || '';
+                },
+
                 async sendLoginPhoneSms() {
                     let phoneNumber = this.loginPhoneSmsData.phoneNumber.replace(/\D/g, '');
                     phoneNumber = phoneNumber.replace(/^0+/, '');
@@ -333,8 +348,8 @@
 
                         this.loginPhoneSmsSent = true;
                         this.loginPhoneSmsData.phone = phone;
-                        this.sms.phoneFormatted = data.phone_formatted || phone;
-                        this.sms.phonePretty = data.phone_pretty || phone;
+                        this.sms.phoneFormatted = data.phone_formatted || this.formatUaPhone(phone);
+                        this.sms.phonePretty = data.phone_pretty || this.sms.phoneFormatted;
                         this.loginPhoneSmsLoading = false;
 
                         // Запускаем таймер для повторной отправки

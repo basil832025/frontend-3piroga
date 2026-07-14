@@ -785,12 +785,12 @@ export default function authModal(opts = {}) {
                 this.sms.phonePretty = this.loginPhoneSmsData.phone;
                 this.sms.phoneDigits = phoneDigits;
                 // Форматируем номер телефона для отображения: +380 (50) 715-27-68
-                if (phoneDigits && phoneDigits.length >= 12 && phoneDigits.startsWith('380')) {
+                if (/^380\d{9}$/.test(phoneDigits)) {
                     const code = phoneDigits.substring(3, 5); // 50
                     const part1 = phoneDigits.substring(5, 8); // 715
                     const part2 = phoneDigits.substring(8, 10); // 27
                     const part3 = phoneDigits.substring(10, 12); // 68
-                    this.sms.phoneFormatted = `+380 (${code}) ${part1}-${part2}-${part3}`;
+                    this.sms.phoneFormatted = `+38 (0${code}) ${part1}-${part2}-${part3}`;
                 } else {
                     this.sms.phoneFormatted = this.loginPhoneSmsData.phone;
                 }
