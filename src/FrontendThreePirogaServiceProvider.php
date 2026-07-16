@@ -20,7 +20,7 @@ class FrontendThreePirogaServiceProvider extends ServiceProvider
         \Illuminate\Support\Facades\Route::middleware('web')->group(__DIR__ . '/../routes/web.php');
 
         $this->publishes([
-            __DIR__ . '/../public' => public_path(),
+            __DIR__ . '/../public' => public_path('vendor/frontend-3piroga'),
         ], 'frontend-3piroga-assets');
     }
 }
