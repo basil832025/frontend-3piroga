@@ -61,7 +61,7 @@
             ];
             $productKeyMap[(string)$row['product_id']] = trim((string) ($row['product_key'] ?? $row['article'] ?? $row['product_id']));
             $manualDiscountMap[(string)$row['product_id']] = isset($row['manual_discount_percent']) && $row['manual_discount_percent'] !== null && $row['manual_discount_percent'] !== ''
-                ? (float) $row['manual_discount_percent']
+                ? round((float) $row['manual_discount_percent'])
                 : null;
             $articleMap[(string)$row['product_id']] = trim((string)($row['article'] ?? ''));
 
@@ -91,7 +91,7 @@
         $initialDiscount = null;
         if ($rootKey && isset($priceMap[$rootKey])) {
             if (($manualDiscountMap[$rootKey] ?? null) !== null) {
-                $initialDiscount = (float) $manualDiscountMap[$rootKey];
+                $initialDiscount = round((float) $manualDiscountMap[$rootKey]);
             } else {
                 $initialPriceData = $priceMap[$rootKey];
                 $oldPrice = $initialPriceData['old'];
@@ -134,7 +134,7 @@
                 discountPercent(){
                     const manualDiscount = this.manualDiscounts[String(this.selected)] ?? null;
                     if (manualDiscount !== null && manualDiscount !== undefined && manualDiscount !== '') {
-                        return Number(manualDiscount);
+                        return Math.round(Number(manualDiscount));
                     }
                     const oldPrice = this.old();
                     const currentPrice = this.price();

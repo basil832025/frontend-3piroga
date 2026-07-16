@@ -64,7 +64,7 @@
             ];
 
             $manualDiscountMap[$rowId] = isset($row['manual_discount_percent']) && $row['manual_discount_percent'] !== null && $row['manual_discount_percent'] !== ''
-                ? (float) $row['manual_discount_percent']
+                ? round((float) $row['manual_discount_percent'])
                 : null;
 
             $badgeMap[$rowId] = [
@@ -79,7 +79,7 @@
             // Рассчитываем скидку только для начального варианта
             if ($rowId === $initialProductId) {
                 if ($manualDiscountMap[$rowId] !== null) {
-                    $initialDiscount = (float) $manualDiscountMap[$rowId];
+                    $initialDiscount = round((float) $manualDiscountMap[$rowId]);
                 } elseif ($rowOldPrice && $rowOldPrice > 0 && $rowPrice && $rowPrice > 0 && $rowOldPrice > $rowPrice) {
                     $initialDiscount = round((($rowOldPrice - $rowPrice) / $rowOldPrice) * 100);
                 }
@@ -87,7 +87,8 @@
         }
     }
 
-    // Если не нашли скидку в вариантах, используем значения из пропсов (для обратной совместимости)
+
+    // Признак карточки с одним вариантом (для внутренних отступов)
     if ($initialDiscount === null && $price_no_sale && $price_no_sale > 0 && $price && $price > 0) {
         $oldPrice = (float)$price_no_sale;
         $currentPrice = (float)$price;
@@ -96,7 +97,6 @@
         }
     }
 
-    // Признак карточки с одним вариантом (для внутренних отступов)
     $rowsCount = count($rows ?? []);
     $isSingleVariant = $rowsCount <= 1;
     $discountLabel = $productCardLabels['discount'];
@@ -152,7 +152,7 @@
             const priceData = this.prices[String(productId)];
             const manualDiscount = this.manualDiscounts[String(productId)] ?? null;
             if (manualDiscount !== null && manualDiscount !== undefined && manualDiscount !== '') {
-                this.discountPercent = Number(manualDiscount);
+                this.discountPercent = Math.round(Number(manualDiscount));
                 return;
             }
             if (!priceData) {
