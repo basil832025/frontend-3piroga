@@ -254,7 +254,7 @@ Route::get('/{categorySlug}/{itemSlug}', function () {
     return response()->view(front_view('404'), [], 404);
 })
     ->where([
-        'categorySlug' => '^(?!ru$|en$)[A-Za-z0-9\-_]+$',
+        'categorySlug' => '(?!(?:ru|en|lang|admin|api)(?:/|$))[A-Za-z0-9\-_]+',
         'itemSlug' => '[^/]+',
     ])
     ->name('product.show');

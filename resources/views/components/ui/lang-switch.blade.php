@@ -12,6 +12,22 @@
         'en' => 'EN',
     ];
 
+    $currentPath = '/' . trim(request()->path(), '/');
+    $currentPath = $currentPath === '/' ? '/' : $currentPath;
+    $basePath = preg_replace('#^/(ru|en)(?=/|$)#i', '', $currentPath);
+    $basePath = is_string($basePath) && $basePath !== '' ? $basePath : '/';
+    $queryString = request()->getQueryString();
+    $languageUrls = collect($locales)
+        ->keys()
+        ->mapWithKeys(function (string $code) use ($basePath, $queryString): array {
+            $targetPath = $code === 'uk'
+                ? $basePath
+                : '/' . $code . ($basePath === '/' ? '' : $basePath);
+
+            return [$code => url($targetPath) . ($queryString ? '?' . $queryString : '')];
+        })
+        ->all();
+
     $currentLabel = $locales[$current] ?? strtoupper($current);
 
     // В хидере обычно меню удобнее справа, в бургере — слева
@@ -45,7 +61,7 @@
     >
         @foreach($locales as $loc => $label)
             <a
-                href="{{ route('lang.switch', $loc) }}"
+                href="{{ $languageUrls[$loc] }}"
                 class="block px-3 py-2 text-sm hover:bg-black/5 {{ $current === $loc ? 'font-semibold' : '' }}"
             >
                 {{ $label }}

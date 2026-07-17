@@ -82,6 +82,21 @@
                     $locale = app()->getLocale();
                     $langs = ['uk' => 'UA', 'ru' => 'RU', 'en' => 'EN'];
                     $localePrefix = in_array($locale, ['ru', 'en'], true) ? '/' . $locale : '';
+                    $currentPath = '/' . trim(request()->path(), '/');
+                    $currentPath = $currentPath === '/' ? '/' : $currentPath;
+                    $basePath = preg_replace('#^/(ru|en)(?=/|$)#i', '', $currentPath);
+                    $basePath = is_string($basePath) && $basePath !== '' ? $basePath : '/';
+                    $queryString = request()->getQueryString();
+                    $languageUrls = collect($langs)
+                        ->keys()
+                        ->mapWithKeys(function (string $code) use ($basePath, $queryString): array {
+                            $targetPath = $code === 'uk'
+                                ? $basePath
+                                : '/' . $code . ($basePath === '/' ? '' : $basePath);
+
+                            return [$code => url($targetPath) . ($queryString ? '?' . $queryString : '')];
+                        })
+                        ->all();
                 @endphp
                 <details
                     class="relative hidden md:block group"
@@ -101,7 +116,7 @@
                         <ul class="text-sm">
                             @foreach($langs as $code => $label)
                                 <li>
-                                    <a href="{{ route('lang.switch', $code) }}"
+                                    <a href="{{ $languageUrls[$code] }}"
                                        class="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 @if($locale===$code) text-orange-600 font-medium @endif"
                                        @if($locale===$code) aria-current="true" @endif>
                                         {{ $label }}
