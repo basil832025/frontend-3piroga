@@ -19,6 +19,7 @@
                     if (typeof checkPromoConditionsFromShipping === 'function') {
                         checkPromoConditionsFromShipping();
                     }
+                    window.dispatchEvent(new CustomEvent('checkout-shipping-method-changed'));
                 })"
                 :class="(typeof method !== 'undefined' && method === 'pickup')
                     ? 'bg-[#FF7500] text-white border-[#FF7500]'
@@ -39,6 +40,7 @@
                     if (typeof checkPromoConditionsFromShipping === 'function') {
                         checkPromoConditionsFromShipping();
                     }
+                    window.dispatchEvent(new CustomEvent('checkout-shipping-method-changed'));
                 })"
                 :class="(typeof method !== 'undefined' && method === 'delivery')
                     ? 'bg-[#FF7500] text-white border-[#FF7500]'

@@ -1,5 +1,5 @@
 <div class="space-y-2"
-     x-data="promoComponent"
+     x-data="promoComponent(@js($appliedCouponCode ?? ''), @js($appliedCouponDiscount ?? 0))"
 >
     <div class="checkout-section-title">
         {{ st('cart.promo.title', 'У вас є промокод?') }}

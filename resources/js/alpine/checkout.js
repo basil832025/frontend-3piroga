@@ -113,6 +113,19 @@ window.checkoutPayparts = {
     }, 250),
 };
 
+window.checkoutAppliedCouponCode = window.checkoutAppliedCouponCode || '';
+
+function getAppliedCouponCode() {
+    const fromState = String(window.checkoutAppliedCouponCode || '').trim();
+    if (fromState) return fromState;
+
+    const appliedInput = document.querySelector('[name="coupon_applied"]');
+    const fromAppliedInput = String(appliedInput?.value || '').trim();
+    if (fromAppliedInput) return fromAppliedInput;
+
+    const couponInput = document.querySelector('[name="coupon"]');
+    return String(couponInput?.value || '').trim();
+}
 function getShippingMethodValue(root = document) {
     const checked = root.querySelector('input[name="shipping_method"]:checked');
     if (checked && checked.value) return String(checked.value).trim();
@@ -639,6 +652,11 @@ function deliveryBlock() {
 window.availablePromosComponent = function (initialSelected) {
     return {
         selected: initialSelected || 'none',
+        requestSeq: 0,
+
+        init() {
+            window.addEventListener('checkout-shipping-method-changed', () => this.apply());
+        },
 
         change(value) {
             this.selected = value;
@@ -646,6 +664,8 @@ window.availablePromosComponent = function (initialSelected) {
         },
 
         apply() {
+            const seq = ++this.requestSeq;
+
             fetch('/checkout/promo', {
                 method: 'POST',
                 headers: {
@@ -653,10 +673,16 @@ window.availablePromosComponent = function (initialSelected) {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                     'Accept': 'application/json',
                 },
-                body: JSON.stringify({ promo: this.selected }),
+                body: JSON.stringify({
+                    promo: this.selected,
+                    coupon: getAppliedCouponCode(),
+                    shipping_method: getShippingMethodValue(document),
+                }),
             })
                 .then(r => r.json())
                 .then(data => {
+                    if (seq !== this.requestSeq) return;
+
                     // guest => redirect to auth (your old behavior)
                     if (data.requires_auth) {
                         this.selected = 'none';
@@ -670,9 +696,24 @@ window.availablePromosComponent = function (initialSelected) {
 
                     if (!data.ok) return;
 
-                    // discount
-                    const discountEl = document.querySelector('[data-checkout-discount]');
-                    if (discountEl) discountEl.textContent = data.discount_formatted;
+                    const returnedCoupon = String(data.coupon_code || '').trim();
+                    if (returnedCoupon) {
+                        window.checkoutAppliedCouponCode = returnedCoupon;
+                        const appliedInput = document.querySelector('[name="coupon_applied"]');
+                        if (appliedInput) appliedInput.value = returnedCoupon;
+                    } else if (Object.prototype.hasOwnProperty.call(data, 'coupon_code')) {
+                        window.checkoutAppliedCouponCode = '';
+                        const appliedInput = document.querySelector('[name="coupon_applied"]');
+                        if (appliedInput) appliedInput.value = '';
+                        window.dispatchEvent(new CustomEvent('checkout-coupon-cleared'));
+                    }
+
+                    if (window.checkoutTotals && typeof window.checkoutTotals.setBaseDiscount === 'function') {
+                        window.checkoutTotals.setBaseDiscount(Number(data.discount || 0), { skipDeliveryRecalc: true });
+                    } else {
+                        const discountEl = document.querySelector('[data-checkout-discount]');
+                        if (discountEl) discountEl.textContent = data.discount_formatted;
+                    }
 
                     // totals (big)
                     const totalUahEl = document.querySelector('[data-checkout-total-uah]');
@@ -685,7 +726,7 @@ window.availablePromosComponent = function (initialSelected) {
 
                     // re-render totals if needed
                     if (window.checkoutTotals && typeof window.checkoutTotals.setPromoDiscount === 'function') {
-                        window.checkoutTotals.setPromoDiscount(0, { skipDeliveryRecalc: true });
+                        window.checkoutTotals.setPromoDiscount(Number(data.coupon_discount || 0), { skipDeliveryRecalc: true });
                         if (data.shipping !== undefined) {
                             window.checkoutTotals.setShipping(Number(data.shipping || 0));
                         } else {
@@ -860,22 +901,34 @@ window.addEventListener('update-promo-status', (event) => {
  * Promos: coupon (promo code)
  * ======================================================= */
 
-window.promoComponent = function () {
+window.promoComponent = function (initialCoupon = '', initialDiscount = 0) {
     return {
-        coupon: '',
-        applied: false,
-        discount: 0,
+        coupon: String(initialCoupon || ''),
+        applied: String(initialCoupon || '').trim() !== '',
+        discount: Number(initialDiscount || 0),
         error: '',
+
+        init() {
+            window.addEventListener('checkout-coupon-cleared', () => {
+                this.coupon = '';
+                this.applied = false;
+                this.discount = 0;
+                this.error = '';
+            });
+
+            const code = String(this.coupon || '').trim();
+            if (!code) return;
+
+            window.checkoutAppliedCouponCode = code;
+            const appliedInput = document.querySelector('[name="coupon_applied"]');
+            if (appliedInput) appliedInput.value = code;
+        },
 
         async apply() {
             this.error = '';
             this.applied = false;
             this.discount = 0;
 
-            if (!this.coupon) {
-                this.error = 'Введите промокод';
-                return;
-            }
 
             try {
                 const response = await fetch('/checkout/apply-coupon', {
@@ -884,7 +937,11 @@ window.promoComponent = function () {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                     },
-                    body: JSON.stringify({ coupon: this.coupon }),
+                    body: JSON.stringify({
+                        coupon: this.coupon,
+                        shipping_method: getShippingMethodValue(document),
+                        selected_promo: document.querySelector('[name="selected_promo"]')?.value || 'none',
+                    }),
                 });
 
                 const res = await response.json();
@@ -895,11 +952,32 @@ window.promoComponent = function () {
                     this.discount = 0;
 
                     // reset promo discount in totals
+                    window.checkoutAppliedCouponCode = '';
+                    const appliedInput = document.querySelector('[name="coupon_applied"]');
+                    if (appliedInput) appliedInput.value = '';
+                    window.checkoutTotals?.setPromoDiscount?.(0);
+                    return;
+                }
+
+                if (res.cleared) {
+                    this.coupon = '';
+                    this.applied = false;
+                    this.discount = 0;
+                    window.checkoutAppliedCouponCode = '';
+                    const appliedInput = document.querySelector('[name="coupon_applied"]');
+                    if (appliedInput) appliedInput.value = '';
+
+                    if (window.checkoutTotals && typeof window.checkoutTotals.setBaseDiscount === 'function') {
+                        window.checkoutTotals.setBaseDiscount(Number(res.base_discount || 0), { skipDeliveryRecalc: true });
+                    }
                     window.checkoutTotals?.setPromoDiscount?.(0);
                     return;
                 }
 
                 this.applied = true;
+                window.checkoutAppliedCouponCode = String(res.code || this.coupon || '').trim();
+                const appliedInput = document.querySelector('[name="coupon_applied"]');
+                if (appliedInput) appliedInput.value = window.checkoutAppliedCouponCode;
                 this.discount = Number(res.discount || 0);
 
                 window.checkoutTotals?.setPromoDiscount?.(this.discount);
@@ -917,12 +995,17 @@ window.promoComponent = function () {
 
 window.checkoutTotals = {
     promoDiscount: 0,
+    baseDiscount: null,
     shipping: 0,
 
     readBase() {
+        if (this.baseDiscount === null) {
+            this.baseDiscount = Money.parse(document.querySelector('[data-checkout-discount]')?.textContent);
+        }
+
         return {
             sub: Money.parse(document.querySelector('[data-checkout-subtotal]')?.textContent),
-            disc: Money.parse(document.querySelector('[data-checkout-discount]')?.textContent),
+            disc: this.baseDiscount,
             bonus: Money.parse(document.querySelector('[data-checkout-bonus]')?.textContent),
         };
     },
@@ -956,7 +1039,20 @@ window.checkoutTotals = {
     },
 
 
+    setBaseDiscount(v, opts = {}) {
+        this.baseDiscount = Number(v || 0);
+        this.render();
+
+        if (!opts.skipDeliveryRecalc) {
+            queueUnifiedDeliveryRecalc('base-discount-change');
+        }
+    },
+
     setPromoDiscount(v, opts = {}) {
+        if (this.baseDiscount === null) {
+            this.baseDiscount = Money.parse(document.querySelector('[data-checkout-discount]')?.textContent);
+        }
+
         this.promoDiscount = Number(v || 0);
         this.render();
         if (!opts.skipDeliveryRecalc) {
@@ -972,6 +1068,12 @@ window.checkoutTotals = {
         // hidden input (if exists)
         const shipInput = document.querySelector('[data-shipping-price-input]');
         if (shipInput) shipInput.value = String(this.shipping || 0);
+
+        const { disc } = this.readBase();
+        const discountEl = document.querySelector('[data-checkout-discount]');
+        if (discountEl) {
+            discountEl.textContent = Money.format(disc + (this.promoDiscount || 0));
+        }
 
         const total = this.getDeliveryBase() + (this.shipping || 0);
         window.checkoutPayparts?.scheduleUpdate?.(total);
@@ -1371,6 +1473,7 @@ function bindDeliveryRecalc() {
             } else {
                 queueUnifiedDeliveryRecalc('shipping-method-change');
             }
+            window.dispatchEvent(new CustomEvent('checkout-shipping-method-changed'));
         }
 
         if (t.matches('[name="use_bonus"], [name="bonus_amount"]')) {

@@ -185,6 +185,11 @@
         function availablePromosComponent(initialSelected) {
             return {
                 selected: initialSelected || 'none',
+                requestSeq: 0,
+
+                init() {
+                    window.addEventListener('checkout-shipping-method-changed', () => this.apply());
+                },
 
                 change(value) {
                     this.selected = value;
@@ -192,6 +197,8 @@
                 },
 
                 apply() {
+                    const seq = ++this.requestSeq;
+
                     fetch('{{ $promoUrl }}', {
                         method: 'POST',
                         headers: {
@@ -199,10 +206,16 @@
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             'Accept': 'application/json',
                         },
-                        body: JSON.stringify({ promo: this.selected }),
+                        body: JSON.stringify({
+                                promo: this.selected,
+                                coupon: String(window.checkoutAppliedCouponCode || document.querySelector('[name="coupon_applied"]')?.value || document.querySelector('[name="coupon"]')?.value || '').trim(),
+                                shipping_method: String(document.querySelector('input[name="shipping_method"]:checked')?.value || document.querySelector('[name="shipping_method"]')?.value || '').trim(),
+                            }),
                     })
                         .then(r => r.json())
                         .then(data => {
+                            if (seq !== this.requestSeq) return;
+
                             // 1) если нужно авторизоваться
                             if (data.requires_auth) {
                                 // откатываем выбор на "Без акции"
@@ -229,17 +242,29 @@
                                 return;
                             }
 
-                            // 3) успешный пересчёт — как уже было
-                            const discountEl = document.querySelector('[data-checkout-discount]');
-                            if (discountEl) {
-                                discountEl.textContent = Number(data.discount || 0).toLocaleString('uk-UA', {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                });
+                            const returnedCoupon = String(data.coupon_code || '').trim();
+                            if (returnedCoupon) {
+                                window.checkoutAppliedCouponCode = returnedCoupon;
+                                const appliedInput = document.querySelector('[name="coupon_applied"]');
+                                if (appliedInput) appliedInput.value = returnedCoupon;
+                            } else if (Object.prototype.hasOwnProperty.call(data, 'coupon_code')) {
+                                window.checkoutAppliedCouponCode = '';
+                                const appliedInput = document.querySelector('[name="coupon_applied"]');
+                                if (appliedInput) appliedInput.value = '';
+                                window.dispatchEvent(new CustomEvent('checkout-coupon-cleared'));
                             }
 
-                            if (window.checkoutTotals && typeof window.checkoutTotals.setPromoDiscount === 'function') {
-                                window.checkoutTotals.setPromoDiscount(0);
+                            if (window.checkoutTotals && typeof window.checkoutTotals.setBaseDiscount === 'function') {
+                                window.checkoutTotals.setBaseDiscount(Number(data.discount || 0), { skipDeliveryRecalc: true });
+                                window.checkoutTotals.setPromoDiscount(Number(data.coupon_discount || 0), { skipDeliveryRecalc: true });
+                            } else {
+                                const discountEl = document.querySelector('[data-checkout-discount]');
+                                if (discountEl) {
+                                    discountEl.textContent = Number(data.discount || 0).toLocaleString('uk-UA', {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                    });
+                                }
                             }
 
                             const totalUahEl = document.querySelector('[data-checkout-total-uah]');

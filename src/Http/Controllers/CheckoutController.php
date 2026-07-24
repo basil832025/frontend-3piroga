@@ -205,6 +205,24 @@ public function index()
             })
         );
 
+    $appliedCouponCode = trim((string) session('checkout.coupon_code', ''));
+    $appliedCouponDiscount = 0.0;
+
+    if ($clientId && $appliedCouponCode !== '') {
+        $cartOrder = Order::query()
+            ->where('clients_id', $clientId)
+            ->where('status', OrderStatus::Cart)
+            ->latest('id')
+            ->first();
+
+        if ($cartOrder) {
+            $appliedCouponDiscount = abs((float) $cartOrder->adjustments()
+                ->whereNull('shop_order_item_id')
+                ->where('type', 'coupon')
+                ->sum('amount'));
+        }
+    }
+
     $paypartsAllowed = $this->isPaypartsEnabledForClient($client);
     $paypartsBanks = $paypartsAllowed
         ? $this->availablePaypartsBanksForCheckout($client, $paypartsCheckoutTotal)
@@ -219,6 +237,8 @@ public function index()
         'timeIntervals' => $timeIntervals,
         'scheduleV2' => $scheduleV2Payload,
         'paypartsBanks' => $paypartsBanks,
+        'appliedCouponCode' => $appliedCouponCode,
+        'appliedCouponDiscount' => $appliedCouponDiscount,
         'paypartsEnabled' => $paypartsEnabled,
     ]);
 }
@@ -613,9 +633,50 @@ public function saveFormData(Request $request)
                 $pricing->recalc($order);
             }
 
+            $couponCode = trim((string) session('checkout.coupon_code', ''));
+            $order->adjustments()->where('type', 'coupon')->delete();
+
+            $couponStillApplies = false;
+            if ($couponCode !== '') {
+                $coupon = PromoCode::query()
+                    ->active()
+                    ->whereRaw('LOWER(code) = ?', [mb_strtolower($couponCode)])
+                    ->first();
+
+                if ($coupon && $coupon->canApplyForClient($client?->id) && $coupon->matchesFulfillmentMethod($order)) {
+                    $couponStillApplies = true;
+                    $order->loadMissing(['items.product.categories']);
+                    if (method_exists(Product::class, 'attributeValues')) {
+                        $order->loadMissing(['items.product.attributeValues']);
+                    }
+
+                    $couponAmount = (float) $pricing->calculateCouponAmountWithSelectedPromo($order, $coupon, $selection);
+                    if ($couponAmount < 0) {
+                        OrderAdjustment::create([
+                            'shop_order_id' => $order->id,
+                            'type'          => 'coupon',
+                            'label'         => 'Promo code ' . $coupon->code,
+                            'amount'        => $couponAmount,
+                            'promo_code_id' => $coupon->id,
+                            'meta'          => [
+                                'code'          => $coupon->code,
+                                'promo_code_id' => $coupon->id,
+                            ],
+                        ]);
+                    }
+                }
+            }
+
+
+            if ($couponCode !== '' && ! $couponStillApplies) {
+                session()->forget('checkout.coupon_code');
+            }
+
+            $pricing->recalc($order);
+
             $promoDiscount = abs((float) $order->adjustments()
                 ->whereNull('shop_order_item_id')
-                ->whereIn('type', ['fixed', 'time'])
+                ->whereIn('type', ['fixed', 'time', 'coupon'])
                 ->sum('amount'));
             session(['checkout.promo_discount' => $promoDiscount]);
 
@@ -635,6 +696,10 @@ public function updatePromo(Request $request)
 {
     $client    = auth()->user();
     $selection = (string) $request->input('promo', 'none');
+    $requestedCoupon = trim((string) $request->input('coupon', ''));
+    $couponCode = $requestedCoupon !== ''
+        ? $requestedCoupon
+        : trim((string) session('checkout.coupon_code', ''));
 
     // если гость — не даём применять акцию, только после логина
     if (! $client) {
@@ -701,7 +766,10 @@ public function updatePromo(Request $request)
 
     $sessionData = session('checkout.form_data', []);
 
-    $shippingMethod = (string) ($sessionData['shipping_method'] ?? ($order->self_pickup ? 'pickup' : 'delivery'));
+    $shippingMethod = (string) $request->input('shipping_method', $sessionData['shipping_method'] ?? ($order->self_pickup ? 'pickup' : 'delivery'));
+    if (! in_array($shippingMethod, ['delivery', 'pickup'], true)) {
+        $shippingMethod = $order->self_pickup ? 'pickup' : 'delivery';
+    }
     $order->shipping_method = $shippingMethod;
     $order->self_pickup = $shippingMethod === 'pickup';
 
@@ -712,23 +780,70 @@ public function updatePromo(Request $request)
 
     $useBonus = !empty($sessionData['use_bonus']);
     $order->sale_sum = $useBonus ? max(0, (float) ($sessionData['bonus_amount'] ?? 0)) : 0.0;
+
+    $order->adjustments()->where('type', 'coupon')->delete();
+
+    $couponStillApplies = false;
+    if ($couponCode !== '') {
+        $coupon = PromoCode::query()
+            ->active()
+            ->whereRaw('LOWER(code) = ?', [mb_strtolower($couponCode)])
+            ->first();
+
+        if ($coupon && $coupon->canApplyForClient($client?->id) && $coupon->matchesFulfillmentMethod($order)) {
+            $couponStillApplies = true;
+            session(['checkout.coupon_code' => $coupon->code]);
+            $order->loadMissing(['items.product.categories']);
+            if (method_exists(Product::class, 'attributeValues')) {
+                $order->loadMissing(['items.product.attributeValues']);
+            }
+
+            $couponAmount = (float) $pricing->calculateCouponAmountWithSelectedPromo($order, $coupon, $selection);
+            if ($couponAmount < 0) {
+                OrderAdjustment::create([
+                    'shop_order_id' => $order->id,
+                    'type'          => 'coupon',
+                    'label'         => 'Промокод ' . $coupon->code,
+                    'amount'        => $couponAmount,
+                    'promo_code_id' => $coupon->id,
+                    'meta'          => [
+                        'code'          => $coupon->code,
+                        'promo_code_id' => $coupon->id,
+                    ],
+                ]);
+            }
+        }
+    }
+
+
+    if ($couponCode !== '' && ! $couponStillApplies) {
+        session()->forget('checkout.coupon_code');
+        $couponCode = '';
+    }
+
+    $pricing->recalc($order);
     $this->recalculateOrderShipping($order);
     $order->grand_total = $this->calculatePayableTotal($order);
     $order->save();
 
-    // 3) Берём результат из БД (adjustments уже записаны)
+    // 3) Р‘РµСЂС‘Рј СЂРµР·СѓР»СЊС‚Р°С‚ РёР· Р‘Р” (adjustments СѓР¶Рµ Р·Р°РїРёСЃР°РЅС‹)
     $discount = abs((float) $order->adjustments()
         ->whereNull('shop_order_item_id')
         ->whereIn('type', ['fixed', 'time'])
-        ->sum('amount')); // amount отрицательный, поэтому abs()
+        ->sum('amount'));
 
+    $couponDiscount = abs((float) $order->adjustments()
+        ->whereNull('shop_order_item_id')
+        ->where('type', 'coupon')
+        ->sum('amount'));
+
+    $totalDiscount = $discount + $couponDiscount;
     $total = (float) ($order->grand_total ?? 0);
     $itemsTotal = (float) ($order->total_price ?? 0);
-    $bonusEarn = $this->loyalty->previewEarnForCart($itemsTotal, $discount, (float) ($order->sale_sum ?? 0));
+    $bonusEarn = $this->loyalty->previewEarnForCart($itemsTotal, $totalDiscount, (float) ($order->sale_sum ?? 0));
     $shipping = (float) ($order->shipping_total ?? $order->shipping_price ?? 0);
 
-    session(['checkout.promo_discount' => $discount]);
-
+    session(['checkout.promo_discount' => $totalDiscount]);
     $uah = (int) floor($total);
     $kop = (int) round(($total - $uah) * 100);
 
@@ -737,6 +852,9 @@ public function updatePromo(Request $request)
         'selection' => $selection,
 
         'discount'  => $discount,
+        'coupon_discount' => $couponDiscount,
+        'coupon_code' => $couponCode,
+        'total_discount' => $totalDiscount,
         'total'     => $total,
         'shipping'  => $shipping,
         'bonus_earn' => $bonusEarn,
@@ -756,9 +874,61 @@ public function applyCoupon(Request $request)
         $code = trim((string) $request->input('coupon', ''));
 
         if ($code === '') {
+            session()->forget('checkout.coupon_code');
+
+            $client = auth()->user();
+            $order = $client
+                ? Order::where('clients_id', $client->id)
+                    ->where('status', OrderStatus::Cart)
+                    ->latest('id')
+                    ->first()
+                : null;
+
+            $baseDiscount = 0.0;
+            $total = 0.0;
+            $shipping = 0.0;
+            $bonusEarn = 0;
+
+            if ($order) {
+                $order->adjustments()->where('type', 'coupon')->delete();
+
+                $pricing = app(\App\Services\OrderPricing::class);
+                $pricing->recalc($order);
+                $this->recalculateOrderShipping($order);
+                $order->grand_total = $this->calculatePayableTotal($order);
+                $order->save();
+
+                $baseDiscount = abs((float) $order->adjustments()
+                    ->whereNull('shop_order_item_id')
+                    ->whereIn('type', ['fixed', 'time'])
+                    ->sum('amount'));
+                $total = (float) ($order->grand_total ?? 0);
+                $shipping = (float) ($order->shipping_total ?? $order->shipping_price ?? 0);
+                $bonusEarn = $this->loyalty->previewEarnForCart(
+                    (float) ($order->total_price ?? 0),
+                    $baseDiscount,
+                    (float) ($order->sale_sum ?? 0)
+                );
+            }
+
+            session(['checkout.promo_discount' => $baseDiscount]);
+
+            $uah = (int) floor($total);
+            $kop = (int) round(($total - $uah) * 100);
+
             return response()->json([
-                'ok'   => false,
-                'mess' => 'Введите промокод',
+                'ok' => true,
+                'cleared' => true,
+                'code' => '',
+                'discount' => 0,
+                'base_discount' => $baseDiscount,
+                'total_discount' => $baseDiscount,
+                'total' => $total,
+                'shipping' => $shipping,
+                'bonus_earn' => $bonusEarn,
+                'total_uah' => $uah,
+                'total_uah_formatted' => number_format($uah, 0, ',', ' '),
+                'total_kop' => sprintf('%02d', $kop),
             ]);
         }
 
@@ -769,6 +939,8 @@ public function applyCoupon(Request $request)
             ->first();
 
         if (! $promo) {
+            session()->forget('checkout.coupon_code');
+
             return response()->json([
                 'ok'   => false,
                 'mess' => st('checkout.promo.not_found_or_inactive', 'Промокод не найден или не активен'),
@@ -777,6 +949,44 @@ public function applyCoupon(Request $request)
 
         $client   = auth()->user();
         $clientId = $client?->id;
+
+        $sessionData = session('checkout.form_data', []);
+        $shippingMethod = (string) $request->input('shipping_method', $sessionData['shipping_method'] ?? 'delivery');
+        if (! in_array($shippingMethod, ['delivery', 'pickup'], true)) {
+            $shippingMethod = 'delivery';
+        }
+
+        if (! $promo->matchesFulfillmentMethod($shippingMethod)) {
+            session()->forget('checkout.coupon_code');
+
+            $baseDiscount = 0.0;
+            if ($client) {
+                $cartOrder = Order::where('clients_id', $client->id)
+                    ->where('status', OrderStatus::Cart)
+                    ->latest('id')
+                    ->first();
+
+                if ($cartOrder) {
+                    $cartOrder->adjustments()->where('type', 'coupon')->delete();
+                    app(\App\Services\OrderPricing::class)->recalc($cartOrder);
+                    $this->recalculateOrderShipping($cartOrder);
+                    $cartOrder->grand_total = $this->calculatePayableTotal($cartOrder);
+                    $cartOrder->save();
+
+                    $baseDiscount = abs((float) $cartOrder->adjustments()
+                        ->whereNull('shop_order_item_id')
+                        ->whereIn('type', ['fixed', 'time'])
+                        ->sum('amount'));
+                }
+            }
+
+            session(['checkout.promo_discount' => $baseDiscount]);
+
+            return response()->json([
+                'ok'   => false,
+                'mess' => st('checkout.promo.wrong_fulfillment_method', 'Промокод не действует для выбранного способа получения'),
+            ]);
+        }
 
         // 2) лимиты/доступность для клиента
         if (! $promo->canApplyForClient($clientId)) {
@@ -825,17 +1035,29 @@ public function applyCoupon(Request $request)
         });
 
         $order = new Order();
+        $order->shipping_method = $shippingMethod;
+        $order->self_pickup = $shippingMethod === 'pickup';
         $order->setRelation('items', $items);
 
-        // 5) считаем скидку через уже готовый метод
-        $amount = (float) $promo->calculateAmountForOrder($order);
+        $selection = (string) $request->input('selected_promo', session('checkout.selected_promo', 'none'));
+        $amount = (float) app(
+            \App\Services\OrderPricing::class
+        )->calculateCouponAmountWithSelectedPromo($order, $promo, $selection);
 
         if ($amount >= 0.0) {
+            session()->forget('checkout.coupon_code');
+            session(['checkout.promo_discount' => 0]);
+
             return response()->json([
                 'ok'   => false,
                 'mess' => st('checkout.promo.no_discount_for_items', 'Промокод не даёт скидки для текущих товаров'),
             ]);
         }
+
+        session([
+            'checkout.coupon_code' => $promo->code,
+            'checkout.promo_discount' => round(abs($amount), 2),
+        ]);
 
         return response()->json([
             'ok'       => true,
@@ -879,7 +1101,10 @@ public function submit(Request $request)
     }
 
     $client = auth()->user();
-    $couponCode = trim((string) $request->input('coupon', ''));
+    $requestedCoupon = trim((string) $request->input('coupon', ''));
+    $couponCode = $requestedCoupon !== ''
+        ? $requestedCoupon
+        : trim((string) session('checkout.coupon_code', ''));
     // 1. Базовая валидация
     $validated = $request->validate([
         'contact_name'     => 'required|string|max:255',
@@ -1203,6 +1428,8 @@ public function submit(Request $request)
 
 
 // === 8.1 Применяем промокод (если был введён) ===
+    $order->adjustments()->where('type', 'coupon')->delete();
+
     if ($couponCode !== '') {
         try {
             $promo = PromoCode::query()
@@ -1210,15 +1437,15 @@ public function submit(Request $request)
                 ->whereRaw('LOWER(code) = ?', [mb_strtolower($couponCode)])
                 ->first();
 
-            if ($promo && $promo->canApplyForClient($client?->id)) {
+            if ($promo && $promo->canApplyForClient($client?->id) && $promo->matchesFulfillmentMethod($order)) {
                 // подгружаем нужные связи для расчёта
                 $order->loadMissing(['items.product.categories']);
                 if (method_exists(Product::class, 'attributeValues')) {
                     $order->loadMissing(['items.product.attributeValues']);
                 }
 
-                // считаем скидку для ЭТОГО заказа
-                $amount = (float) $promo->calculateAmountForOrder($order); // ОТРИЦАТЕЛЬНОЕ число
+                // считаем только дополнительную выгоду купона сверх выбранной акции
+                $amount = (float) $pricing->calculateCouponAmountWithSelectedPromo($order, $promo, $selection); // отрицательное число
 
                 if ($amount < 0) {
                     $discount = abs($amount);
@@ -1259,6 +1486,8 @@ public function submit(Request $request)
     }
 
 // === 9. Реальное списание бонусов по заказу ===
+    $pricing->recalc($order);
+
     $used = 0.0;
     if ($requestedBonus > 0) {
         $used = $this->loyalty->spendOnOrder($order, $requestedBonus);
