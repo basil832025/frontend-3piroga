@@ -10,6 +10,7 @@ use App\Models\Shop\Client;
 use App\Models\Shop\ClientAddress;
 use App\Models\Shop\PaypartsBank;
 use App\Enums\OrderStatus;
+use App\Enums\PaypartsBankTypeEnum;
 use App\Models\Location;
 use App\Enums\PaymentMethodEnum;
 use Illuminate\Http\Request;
@@ -27,6 +28,7 @@ use App\Services\DeliveryCalculationService;
 use App\Services\ScheduleV2Service;
 use App\Services\LiqPayService;
 use App\Services\PrivatBankPaypartsService;
+use App\Services\MonoBankPaypartsService;
 use App\Mail\OrderNotificationMail;
 use App\Mail\OrderClientMail;
 use Illuminate\Support\Facades\Mail;
@@ -1942,9 +1944,16 @@ public function payPayparts(Request $request, $localeOrOrder, ?Order $order = nu
     $clientEmail = trim((string) ($order->clients?->email ?: ($paypartsSession['contact_email'] ?? '')));
     $editEmail = $request->boolean('edit_email');
     $emailRequired = $editEmail || $clientEmail === '' || ! filter_var($clientEmail, FILTER_VALIDATE_EMAIL);
-    $paymentUrl = $transaction?->token
+    $paymentUrl = $transaction?->token && $bank?->bankType() === PaypartsBankTypeEnum::PrivatBank
         ? PrivatBankPaypartsService::make()->paymentUrl((string) $transaction->token)
         : null;
+
+    if ($bank?->bankType() === PaypartsBankTypeEnum::MonoBank
+        && $transaction
+        && ((string) $transaction->status === 'payment_failed' || blank($transaction->token))
+    ) {
+        $transaction = null;
+    }
     $error = null;
 
     if ($paymentUrl && $transaction) {
@@ -1961,12 +1970,11 @@ public function payPayparts(Request $request, $localeOrOrder, ?Order $order = nu
             ]);
         }
     }
-
     if (! $bank || ! $bank->is_active) {
         $error = st('cart.payment.payparts_bank_unavailable', 'Обраний банк зараз недоступний.');
     }
 
-    if (! $emailRequired && ! $paymentUrl && ! $error) {
+    if (! $emailRequired && ! $paymentUrl && ! ($bank?->bankType() === PaypartsBankTypeEnum::MonoBank && $transaction?->token) && ! $error) {
         $planKey = (string) ($paypartsSession['plan_key'] ?? '');
         $plans = collect($bank->plansForAmount((float) $order->grand_total));
         $plan = $plans->firstWhere('key', $planKey);
@@ -1977,22 +1985,37 @@ public function payPayparts(Request $request, $localeOrOrder, ?Order $order = nu
             $error = st('cart.payment.payparts_plan_unavailable', 'Обрані умови оплати частинами недоступні для цієї суми.');
         } else {
             try {
-                $transaction = PrivatBankPaypartsService::make()->createPayment(
-                    order: $order,
-                    bank: $bank,
-                    merchantType: (string) ($plan['merchant_type'] ?? ''),
-                    partsCount: (int) ($plan['parts_count'] ?? 0),
-                    customerPhone: (string) ($paypartsSession['contact_phone'] ?? $order->clients?->phone ?? ''),
-                    customerEmail: (string) ($paypartsSession['contact_email'] ?? $order->clients?->email ?? ''),
-                    locale: $locale ?: app()->getLocale(),
-                );
+                if ($bank->bankType() === PaypartsBankTypeEnum::MonoBank) {
+                    $transaction = MonoBankPaypartsService::make()->createPayment(
+                        order: $order,
+                        bank: $bank,
+                        merchantType: (string) ($plan['merchant_type'] ?? 'product_1'),
+                        partsCount: (int) ($plan['parts_count'] ?? 0),
+                        customerPhone: (string) ($paypartsSession['contact_phone'] ?? $order->clients?->phone ?? ''),
+                        customerEmail: (string) ($paypartsSession['contact_email'] ?? $order->clients?->email ?? ''),
+                        locale: $locale ?: app()->getLocale(),
+                    );
 
-                $order->payparts_status = 'payment_redirected';
-                $order->save();
+                    $order->payparts_status = 'pending_payment';
+                    $order->save();
+                    $paymentUrl = null;
+                } else {
+                    $transaction = PrivatBankPaypartsService::make()->createPayment(
+                        order: $order,
+                        bank: $bank,
+                        merchantType: (string) ($plan['merchant_type'] ?? ''),
+                        partsCount: (int) ($plan['parts_count'] ?? 0),
+                        customerPhone: (string) ($paypartsSession['contact_phone'] ?? $order->clients?->phone ?? ''),
+                        customerEmail: (string) ($paypartsSession['contact_email'] ?? $order->clients?->email ?? ''),
+                        locale: $locale ?: app()->getLocale(),
+                    );
 
-                $paymentUrl = PrivatBankPaypartsService::make()->paymentUrl((string) $transaction->token);
+                    $order->payparts_status = 'payment_redirected';
+                    $order->save();
+                    $paymentUrl = PrivatBankPaypartsService::make()->paymentUrl((string) $transaction->token);
+                }
             } catch (\Throwable $e) {
-                \Log::error('PrivatBank payparts create payment failed', [
+                \Log::error('Payparts create payment failed', [
                     'order_id' => $order->id,
                     'bank_id' => $bank->id,
                     'plan_key' => $planKey,

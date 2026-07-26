@@ -13,6 +13,7 @@
                 ? route('localized.checkout.pay.payparts.status', ['locale' => $locale, 'order' => $order])
                 : route('checkout.pay.payparts.status', ['order' => $order]);
             $bankName = $bank?->localizedText('name', $locale, 'PrivatBank') ?? 'PrivatBank';
+            $isMonoPayparts = ($bank?->bank_type ?? '') === 'monobank';
             $saveEmailAction = in_array($locale, ['ru', 'en'], true)
                 ? route('localized.checkout.pay.payparts.email', ['locale' => $locale, 'order' => $order])
                 : route('checkout.pay.payparts.email', ['order' => $order]);
@@ -87,7 +88,7 @@
                         {{ st('checkout.liqpay.save_email_and_continue', 'Зберегти email та продовжити') }}
                     </button>
                 </form>
-            @elseif ($paymentUrl)
+            @elseif ($paymentUrl || ($isMonoPayparts && $transaction?->token))
                 @if (! $emailRequired && $clientEmail !== '')
                     <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800">
                         <div class="mb-1 font-medium text-[#272828]">{{ st('checkout.liqpay.email_notice', 'На цей email буде надіслано фіскальний чек.') }}</div>
@@ -100,22 +101,28 @@
                     </div>
                 @endif
                 <p class="mb-3 text-sm text-[#6B7280]">
-                    {{ st('checkout.payparts.redirect_hint', 'Р’С–РґРєСЂРёР№С‚Рµ СЃС‚РѕСЂС–РЅРєСѓ РџСЂРёРІР°С‚Р‘Р°РЅРєСѓ РІ РЅРѕРІС–Р№ РІРєР»Р°РґС†С– С‚Р° РїС–РґС‚РІРµСЂРґСЊС‚Рµ РѕРїР»Р°С‚Сѓ С‡Р°СЃС‚РёРЅР°РјРё. Р¦СЋ СЃС‚РѕСЂС–РЅРєСѓ РЅРµ Р·Р°РєСЂРёРІР°Р№С‚Рµ: РјРё РѕС‡С–РєСѓС”РјРѕ РїС–РґС‚РІРµСЂРґР¶РµРЅРЅСЏ РІС–Рґ Р±Р°РЅРєСѓ.') }}
+                    {{ $isMonoPayparts
+                        ? st('checkout.payparts.monobank_push_hint', 'Confirm payment by parts in the monobank app. Keep this page open while we wait for bank confirmation.')
+                        : st('checkout.payparts.redirect_hint', 'Open the bank page in a new tab and confirm payment by parts. Keep this page open while we wait for bank confirmation.') }}
                 </p>
 
                 <p id="payparts-waiting-status" class="mb-4 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-900">
-                    {{ st('checkout.payparts.waiting_bank', 'РћС‡С–РєСѓС”РјРѕ РїС–РґС‚РІРµСЂРґР¶РµРЅРЅСЏ РІС–Рґ РџСЂРёРІР°С‚Р‘Р°РЅРєСѓ...') }}
+                    {{ $isMonoPayparts
+                        ? st('checkout.payparts.waiting_monobank', 'Waiting for confirmation in the monobank app...')
+                        : st('checkout.payparts.waiting_bank', 'Waiting for bank confirmation...') }}
                 </p>
 
-                <a
-                    id="payparts-pay-button"
-                    href="{{ $paymentUrl }}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex h-11 items-center rounded-full bg-[#FF7500] px-6 text-sm font-semibold text-white transition hover:bg-[#e56700]"
-                >
-                    {{ st('checkout.payparts.go_to_bank', 'Р’С–РґРєСЂРёС‚Рё РџСЂРёРІР°С‚Р‘Р°РЅРє') }}
-                </a>
+                @if ($paymentUrl)
+                    <a
+                        id="payparts-pay-button"
+                        href="{{ $paymentUrl }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex h-11 items-center rounded-full bg-[#FF7500] px-6 text-sm font-semibold text-white transition hover:bg-[#e56700]"
+                    >
+                        {{ st('checkout.payparts.go_to_bank', 'Open bank') }}
+                    </a>
+                @endif
             @else
                 <div class="rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-900">
                     {{ st('checkout.payparts.prepare_failed', 'РќРµ РІРґР°Р»РѕСЃСЏ РїС–РґРіРѕС‚СѓРІР°С‚Рё РїРµСЂРµС…С–Рґ РґРѕ Р±Р°РЅРєСѓ. РЎРїСЂРѕР±СѓР№С‚Рµ С‰Рµ СЂР°Р·.') }}
@@ -128,7 +135,7 @@
         </p>
     </div>
 
-    @if ($paymentUrl)
+    @if ($paymentUrl || ($isMonoPayparts && $transaction?->token))
         @push('scripts')
             <script>
                 (function () {

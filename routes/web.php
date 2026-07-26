@@ -65,6 +65,9 @@ Route::post('/liqpay/callback', [LiqPayController::class, 'callback'])
 Route::match(['get', 'post'], '/payparts/response', [PaypartsController::class, 'response'])
     ->name('payparts.response')
     ->withoutMiddleware([VerifyCsrfToken::class]);
+Route::post('/payparts/monobank/response', [PaypartsController::class, 'monobankResponse'])
+    ->name('payparts.monobank.response')
+    ->withoutMiddleware([VerifyCsrfToken::class]);
 Route::get('/payparts/redirect', [PaypartsController::class, 'redirect'])
     ->name('payparts.redirect');
 
