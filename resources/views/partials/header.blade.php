@@ -151,12 +151,42 @@
                     $searchSuggest = in_array($locale, ['ru', 'en'], true)
                         ? route('localized.search.suggest', ['locale' => $locale])
                         : route('search.suggest');
+                    $deliveryUrl = url('/delivery');
                 @endphp
                 <x-search.header :action="$searchAction" :suggest="$searchSuggest" :placeholder="st('search.placeholder', 'Я шукаю...')" maxWidth="450px" />
             </div>
 
             {{-- ПРАВО: иконки --}}
             <div class="flex items-center gap-3 md:gap-[20px] shrink-0">
+                <a
+                    href="{{ $deliveryUrl }}"
+                    class="group relative inline-flex items-center justify-center w-6 h-6 shrink-0 text-[#19191A] hover:text-[#FF7500]"
+                    aria-label="{{ st('header.delivery_link', 'Доставка') }}"
+                >
+                    <svg
+                        class="w-6 h-6 shrink-0 flex-none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 64 64"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="M8 12L24 8L40 12L56 8V52L40 56L24 52L8 56V12Z"/>
+                        <path d="M24 8V52"/>
+                        <path d="M40 12V56"/>
+                        <path d="M18 18C14 18 11 21 11 25C11 31 18 38 18 38C18 38 25 31 25 25C25 21 22 18 18 18Z"/>
+                        <circle cx="18" cy="25" r="2.5"/>
+                        <path d="M18 38C24 42 30 42 36 36" stroke-dasharray="3 3"/>
+                        <path d="M35 34H47L52 39V48H35V34Z"/>
+                        <path d="M47 39H52"/>
+                        <circle cx="39" cy="50" r="2.5"/>
+                        <circle cx="49" cy="50" r="2.5"/>
+                    </svg>
+                </a>
+
                 {{-- Поиск (mobile) --}}
                 <button
                     type="button"
