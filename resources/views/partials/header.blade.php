@@ -166,24 +166,21 @@
                     <svg
                         class="w-6 h-6 shrink-0 flex-none"
                         xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 64 64"
+                        viewBox="0 0 24 24"
+                        width="24"
+                        height="24"
                         fill="none"
                         stroke="currentColor"
-                        stroke-width="2.5"
+                        stroke-width="2"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         aria-hidden="true"
                     >
-                        <path d="M8 12L24 8L40 12L56 8V52L40 56L24 52L8 56V12Z"/>
-                        <path d="M24 8V52"/>
-                        <path d="M40 12V56"/>
-                        <path d="M18 18C14 18 11 21 11 25C11 31 18 38 18 38C18 38 25 31 25 25C25 21 22 18 18 18Z"/>
-                        <circle cx="18" cy="25" r="2.5"/>
-                        <path d="M18 38C24 42 30 42 36 36" stroke-dasharray="3 3"/>
-                        <path d="M35 34H47L52 39V48H35V34Z"/>
-                        <path d="M47 39H52"/>
-                        <circle cx="39" cy="50" r="2.5"/>
-                        <circle cx="49" cy="50" r="2.5"/>
+                        <path d="M3 6h11v11H3z"/>
+                        <path d="M14 10h4l3 3v4h-7z"/>
+                        <path d="M14 10v3h7"/>
+                        <circle cx="7" cy="18" r="2"/>
+                        <circle cx="18" cy="18" r="2"/>
                     </svg>
                 </a>
 
