@@ -227,6 +227,17 @@ Route::get('/oplata-chastynamy-pryvatbank', function () {
     ->defaults('page_cache_candidate', true)
     ->withoutMiddleware([VerifyCsrfToken::class]);
 
+Route::get('/pokupka-chastynamy-monobank', function () {
+    $page = Pages::query()
+        ->where('slug', 'pokupka-chastynamy-monobank')
+        ->firstOrFail();
+
+    return view('pages.monobank-installments', compact('page'));
+})
+    ->name('monobank.installments')
+    ->defaults('page_cache_candidate', true)
+    ->withoutMiddleware([VerifyCsrfToken::class]);
+
 Route::get('/{categorySlug}/{itemSlug}', function () {
     $categorySlug = (string) request()->route('categorySlug');
     $itemSlug = (string) request()->route('itemSlug');
