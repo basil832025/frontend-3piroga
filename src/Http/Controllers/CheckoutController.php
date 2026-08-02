@@ -378,6 +378,77 @@ private function minutesToTime(int $minutes): string
     $mins = $minutes % 60;
     return sprintf('%02d:%02d', $hours, $mins);
 }
+private function parseCheckoutDeliveryDate(?string $deliveryDate): ?Carbon
+{
+    $deliveryDate = trim((string) $deliveryDate);
+    if ($deliveryDate === '') {
+        return null;
+    }
+
+    try {
+        if (preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $deliveryDate)) {
+            return Carbon::createFromFormat('d.m.Y', $deliveryDate)->startOfDay();
+        }
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $deliveryDate)) {
+            return Carbon::createFromFormat('Y-m-d', $deliveryDate)->startOfDay();
+        }
+
+        return Carbon::parse($deliveryDate)->startOfDay();
+    } catch (\Throwable) {
+        return null;
+    }
+}
+
+private function normalizeCheckoutDeliveryTime(?string $deliveryTime): ?string
+{
+    $deliveryTime = trim((string) $deliveryTime);
+    if ($deliveryTime === '') {
+        return null;
+    }
+
+    $startTime = trim(explode('-', $deliveryTime)[0]);
+    if (! preg_match('/^(\d{1,2}):(\d{2})(?::\d{2})?$/', $startTime, $matches)) {
+        return null;
+    }
+
+    $hours = (int) $matches[1];
+    $minutes = (int) $matches[2];
+    if ($hours > 23 || $minutes > 59) {
+        return null;
+    }
+
+    return sprintf('%02d:%02d', $hours, $minutes);
+}
+
+private function composeCheckoutDeliveryMoment(?string $deliveryDate, ?string $deliveryTime): ?Carbon
+{
+    $date = $this->parseCheckoutDeliveryDate($deliveryDate);
+    $time = $this->normalizeCheckoutDeliveryTime($deliveryTime);
+
+    if (! $date || ! $time) {
+        return null;
+    }
+
+    [$hours, $minutes] = array_map('intval', explode(':', $time));
+
+    return $date->copy()->setTime($hours, $minutes);
+}
+
+private function checkoutDeliveryMomentError(?string $deliveryDate, ?string $deliveryTime): ?string
+{
+    $moment = $this->composeCheckoutDeliveryMoment($deliveryDate, $deliveryTime);
+
+    if (! $moment) {
+        return st('cart.delivery.time_invalid', 'Оберіть коректний час доставки');
+    }
+
+    if ($moment->lte(now($moment->timezone))) {
+        return st('cart.delivery.time_past', 'Оберіть майбутній час доставки');
+    }
+
+    return null;
+}
 
 /**
  * Сохранение данных формы в сессию
@@ -500,6 +571,24 @@ public function saveFormData(Request $request)
     // Сохраняем в сессию (объединяем с существующими данными, чтобы не потерять уже сохраненные)
     $existingData = session('checkout.form_data', []);
     $mergedData = array_merge($existingData, $data);
+
+    $shippingMethodForValidation = $mergedData['shipping_method'] ?? 'delivery';
+    $deliveryModeForValidation = $mergedData['delivery_mode'] ?? 'asap';
+    if ($shippingMethodForValidation === 'delivery' && $deliveryModeForValidation === 'fixed') {
+        $deliveryTimeError = $this->checkoutDeliveryMomentError(
+            $mergedData['delivery_date'] ?? null,
+            $mergedData['delivery_time'] ?? null,
+        );
+
+        if ($deliveryTimeError) {
+            return response()->json([
+                'ok' => false,
+                'message' => $deliveryTimeError,
+                'errors' => ['delivery_time' => [$deliveryTimeError]],
+            ], 422);
+        }
+    }
+
     session(['checkout.form_data' => $mergedData]);
 
     if (array_key_exists('selected_promo', $data)) {
@@ -519,12 +608,7 @@ public function saveFormData(Request $request)
             $deliveryMode = $mergedData['delivery_mode'] ?? 'asap';
             $deliveryDate = $mergedData['delivery_date'] ?? null;
             $deliveryTimeRaw = $mergedData['delivery_time'] ?? null;
-
-            // Извлекаем первое время из диапазона
-            $deliveryTime = $deliveryTimeRaw;
-            if ($deliveryTimeRaw && strpos($deliveryTimeRaw, '-') !== false) {
-                $deliveryTime = trim(explode('-', $deliveryTimeRaw)[0]);
-            }
+            $deliveryTime = $this->normalizeCheckoutDeliveryTime($deliveryTimeRaw);
 
             // Обновляем дату доставки
             if ($deliveryMode === 'fixed' && $deliveryDate) {
@@ -1149,6 +1233,17 @@ public function submit(Request $request)
             'delivery_date.required' => st('cart.delivery.date_required', 'Оберіть дату доставки'),
             'delivery_time.required' => st('cart.delivery.time_required', 'Оберіть час доставки'),
         ]);
+
+        $deliveryTimeError = $this->checkoutDeliveryMomentError(
+            $request->input('delivery_date'),
+            $request->input('delivery_time'),
+        );
+
+        if ($deliveryTimeError) {
+            return back()
+                ->withErrors(['delivery_time' => $deliveryTimeError])
+                ->withInput();
+        }
     }
 
     // 2. Адрес: существующий или новый (только для доставки)
@@ -1229,13 +1324,7 @@ public function submit(Request $request)
     $deliveryMode   = $request->input('delivery_mode', 'asap');
     $deliveryDate   = $request->input('delivery_date');
     $deliveryTimeRaw = $request->input('delivery_time'); // Диапазон типа "12:00-12:15"
-
-    // Извлекаем первое время из диапазона для сохранения в базу
-    // Если формат "12:00-12:15", берем "12:00"
-    $deliveryTime = $deliveryTimeRaw;
-    if ($deliveryTimeRaw && strpos($deliveryTimeRaw, '-') !== false) {
-        $deliveryTime = trim(explode('-', $deliveryTimeRaw)[0]);
-    }
+    $deliveryTime = $this->normalizeCheckoutDeliveryTime($deliveryTimeRaw);
 
     // Валидация даты и времени для режима "fixed" уже выполнена выше
 
