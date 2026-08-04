@@ -121,7 +121,7 @@
                     if (!paypartsBankId || (bankIds.length && !bankIds.includes(String(paypartsBankId)))) paypartsBankId = $el.dataset.defaultPaypartsBankId || '';
                     if (!paypartsPlanKey || !planKeys.includes(String(paypartsPlanKey))) paypartsPlanKey = $el.dataset.defaultPaypartsPlanKey || '';
                 })"
-                class="pl-8 space-y-3"
+                class="pl-0 space-y-3"
             >
 
 
@@ -130,7 +130,7 @@
                         {{ st('cart.payment.payparts_unavailable', 'Оплата частинами зараз налаштовується. Доступні банки зʼявляться після додавання записів у адмінці.') }}
                     </p>
                 @else
-                    <div class="grid gap-5 pt-4 md:grid-cols-2">
+                    <div class="flex gap-5 overflow-x-auto pt-4 pb-2 pr-2 no-scrollbar scroll-smooth">
                         @foreach($paypartsBanks as $bank)
                             @php
                                 $bankPlans = collect($bank['rules'] ?? []);
@@ -140,7 +140,7 @@
                             @endphp
                             <div
                                 data-payparts-bank-card="{{ $bank['id'] }}"
-                                class="relative rounded border bg-white px-4 pb-5 pt-5 transition md:min-h-[620px]"
+                                class="relative w-[220px] min-w-[220px] shrink-0 rounded border bg-white px-4 pb-5 pt-5 transition"
                                 style="border-color: {{ (string) $selectedPaypartsBankId === (string) $bank['id'] ? '#ff7500' : '#d8d8d8' }}; {{ (string) $selectedPaypartsBankId === (string) $bank['id'] ? 'box-shadow: 0 0 0 1px rgba(255,117,0,.18);' : '' }}"
                                 :style="String(paypartsBankId) === '{{ $bank['id'] }}' ? 'border-color: #ff7500; box-shadow: 0 0 0 1px rgba(255,117,0,.18);' : 'border-color: #d8d8d8; box-shadow: none;'"
                                 @click="paypartsBankId = '{{ $bank['id'] }}'; if (!@js($bankPlanKeys->all()).includes(paypartsPlanKey)) paypartsPlanKey = @js($defaultBankPlanKey)"
@@ -411,11 +411,11 @@
                                                  :value="financialPhoneDigits.length === 9 ? '380' + financialPhoneDigits : ''"
                                                  :disabled="paymentMethod !== 'payparts' || String(paypartsBankId) !== '{{ $bank['id'] }}'"
                                              >
-                                             <div class="flex max-w-[260px]">
+                                             <div class="flex w-full min-w-0">
                                                  <div class="flex h-10 shrink-0 items-center rounded-l border border-r-0 border-[#dadada] bg-gray-50 px-3 text-[14px] font-medium leading-[18px] text-black">
                                                      +380
                                                  </div>
-                                                 <div class="relative flex-1">
+                                                 <div class="relative min-w-0 flex-1">
                                                      <input
                                                          id="payparts-financial-phone-{{ $bank['id'] }}"
                                                          x-ref="paypartsFinancialPhoneInput"

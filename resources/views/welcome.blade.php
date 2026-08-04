@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Test Tailwind</title>
-    @vite('packages/frontend-3piroga/resources/css/app.css')
+    @vite('packages/frontend-3piroga/resources/css/app.css', 'build/frontend-3piroga')
 </head>
 <body class="antialiased">
 <div class="bg-red-500 text-white p-6 rounded-lg">

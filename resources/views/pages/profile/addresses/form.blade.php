@@ -267,7 +267,7 @@
     {{-- Загружаем Google Maps API синхронно перед map-cart.js --}}
     <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.key') }}&libraries=places,geometry"></script>
     {{-- Загружаем map-cart.js для доступа к deliveryAreas --}}
-    @vite(['packages/frontend-3piroga/resources/js/map-cart.js'])
+    @vite(['packages/frontend-3piroga/resources/js/map-cart.js'], 'build/frontend-3piroga')
     <script>
     // Инициализация автозаполнения адреса для профиля с фильтрацией по зонам доставки
                 (function() {
