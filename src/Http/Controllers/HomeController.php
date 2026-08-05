@@ -113,7 +113,8 @@ class HomeController extends Controller
 
         $buildHomeCategorySection = function (string $slug, string $title) use ($locale, $applyMainPageBase, &$excludeRootIds, $catalogCache): ?array {
             $excludedIds = $excludeRootIds;
-            $cacheKey = $catalogCache->key('home_category_section', array_merge([$slug], $excludedIds), $locale);
+            $sortKey = (string) request()->query('sort', 'popular');
+            $cacheKey = $catalogCache->key('home_category_section_v2', array_merge([$slug, $sortKey], $excludedIds), $locale);
 
             $payload = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($slug, $locale, $applyMainPageBase, $excludedIds) {
                 $q = Product::withListingCardRelations()
@@ -125,7 +126,11 @@ class HomeController extends Controller
                     ->when(! empty($excludedIds), fn ($qq) => $qq->whereNotIn('bs_products.id', $excludedIds));
 
                 $applyMainPageBase($q);
-                $this->applySort($q, request());
+                if ($this->isDefaultCatalogSort(request())) {
+                    $this->applyCategoryDefaultSort($q, $slug);
+                } else {
+                    $this->applySort($q, request());
+                }
 
                 $models = $q->get();
 

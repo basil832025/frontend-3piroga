@@ -143,7 +143,11 @@ class CatalogController extends Controller
                 $this->applyFilters($q, request());
             }
 
-            $this->applySort($q, request());
+            if ($this->isDefaultCatalogSort(request()) && count($sectionSlugs) === 1) {
+                $this->applyCategoryDefaultSort($q, $sectionSlugs[0]);
+            } else {
+                $this->applySort($q, request());
+            }
 
             $items = $q->get();
             $items = (new ProductCardPresenter($locale, null, true))->collection($items);
@@ -204,8 +208,18 @@ class CatalogController extends Controller
         });
 
         $favoriteIds = $ids;
-        $categorySections = collect($homeCategorySlugs)->map(function ($title, $sectionSlug) use ($groupedItems) {
+        $categorySortOrders = $this->categorySortOrders($sectionSlugs);
+
+        $categorySections = collect($homeCategorySlugs)->map(function ($title, $sectionSlug) use ($groupedItems, $categorySortOrders) {
             $items = $groupedItems->get($sectionSlug, collect())->values();
+
+            if ($this->isDefaultCatalogSort(request())) {
+                $sortOrders = $categorySortOrders[$sectionSlug] ?? [];
+                $items = $items->sortBy(fn (array $item): array => [
+                    $sortOrders[(int) ($item['root_id'] ?? 0)] ?? PHP_INT_MAX,
+                    (int) ($item['root_id'] ?? 0),
+                ])->values();
+            }
 
             return [
                 'title' => $title,
