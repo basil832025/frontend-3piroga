@@ -81,48 +81,13 @@
                             xmlns="http://www.w3.org/2000/svg"
                             aria-hidden="true"
                         >
-                            <path
-                                d="M4 10H20"
-                                stroke="currentColor"
-                                stroke-width="1.7"
-                                stroke-linecap="round"
-                            />
-                            <path
-                                d="M6 10V19"
-                                stroke="currentColor"
-                                stroke-width="1.7"
-                                stroke-linecap="round"
-                            />
-                            <path
-                                d="M10 10V19"
-                                stroke="currentColor"
-                                stroke-width="1.7"
-                                stroke-linecap="round"
-                            />
-                            <path
-                                d="M14 10V19"
-                                stroke="currentColor"
-                                stroke-width="1.7"
-                                stroke-linecap="round"
-                            />
-                            <path
-                                d="M18 10V19"
-                                stroke="currentColor"
-                                stroke-width="1.7"
-                                stroke-linecap="round"
-                            />
-                            <path
-                                d="M3 19H21"
-                                stroke="currentColor"
-                                stroke-width="1.7"
-                                stroke-linecap="round"
-                            />
-                            <path
-                                d="M12 3L21 8H3L12 3Z"
-                                stroke="currentColor"
-                                stroke-width="1.7"
-                                stroke-linejoin="round"
-                            />
+                            <path d="M4 10H20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                            <path d="M6 10V19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                            <path d="M10 10V19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                            <path d="M14 10V19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                            <path d="M18 10V19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                            <path d="M3 19H21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                            <path d="M12 3L21 8H3L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
                         </svg>
                     </div>
 
@@ -139,9 +104,10 @@
 
                 <div
                     class="prose prose-lg relative mt-7 max-w-none
-                           prose-p:my-2
-                           prose-p:leading-7
-                           prose-p:text-gray-600
+                           prose-p:my-3
+                           prose-p:leading-8
+                           prose-p:text-gray-700
+                           prose-strong:font-bold
                            prose-strong:text-black"
                 >
                     {!! $providerInfo !!}
@@ -164,47 +130,17 @@
                             xmlns="http://www.w3.org/2000/svg"
                             aria-hidden="true"
                         >
-                            <path
-                                d="M8 6H20"
-                                stroke="currentColor"
-                                stroke-width="1.7"
-                                stroke-linecap="round"
-                            />
-                            <path
-                                d="M8 12H20"
-                                stroke="currentColor"
-                                stroke-width="1.7"
-                                stroke-linecap="round"
-                            />
-                            <path
-                                d="M8 18H20"
-                                stroke="currentColor"
-                                stroke-width="1.7"
-                                stroke-linecap="round"
-                            />
-                            <path
-                                d="M4 6H4.01"
-                                stroke="currentColor"
-                                stroke-width="2.2"
-                                stroke-linecap="round"
-                            />
-                            <path
-                                d="M4 12H4.01"
-                                stroke="currentColor"
-                                stroke-width="2.2"
-                                stroke-linecap="round"
-                            />
-                            <path
-                                d="M4 18H4.01"
-                                stroke="currentColor"
-                                stroke-width="2.2"
-                                stroke-linecap="round"
-                            />
+                            <path d="M8 6H20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                            <path d="M8 12H20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                            <path d="M8 18H20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                            <path d="M4 6H4.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                            <path d="M4 12H4.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                            <path d="M4 18H4.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
                         </svg>
                     </div>
 
                     <div class="min-w-0">
-                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
+                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">
                             Умови сервісу
                         </div>
 
@@ -215,14 +151,15 @@
                 </div>
 
                 <div
-                    class="prose prose-lg relative mt-7 max-w-none
-                           prose-ul:my-0
-                           prose-ul:space-y-3
-                           prose-ul:pl-5
-                           prose-li:leading-7
-                           prose-li:text-white/75
-                           prose-strong:text-white
-                           prose-marker:text-white"
+                    class="relative mt-7
+                           [&_ul]:m-0
+                           [&_ul]:space-y-4
+                           [&_ul]:pl-5
+                           [&_li]:leading-8
+                           [&_li]:text-white/90
+                           [&_li::marker]:text-white/80
+                           [&_strong]:font-bold
+                           [&_strong]:text-white"
                 >
                     {!! $features !!}
                 </div>
@@ -231,9 +168,7 @@
         </div>
 
         {{-- Попередження --}}
-        <div
-            class="mt-6 rounded-[1.5rem] border border-black/10 bg-white p-5 shadow-sm sm:p-6"
-        >
+        <div class="mt-6 rounded-[1.5rem] border border-black/10 bg-white p-5 shadow-sm sm:p-6">
             <div class="flex items-start gap-4">
                 <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f4f4f5] text-black">
                     <svg
@@ -243,25 +178,9 @@
                         xmlns="http://www.w3.org/2000/svg"
                         aria-hidden="true"
                     >
-                        <circle
-                            cx="12"
-                            cy="12"
-                            r="9"
-                            stroke="currentColor"
-                            stroke-width="1.7"
-                        />
-                        <path
-                            d="M12 10V16"
-                            stroke="currentColor"
-                            stroke-width="1.7"
-                            stroke-linecap="round"
-                        />
-                        <path
-                            d="M12 7H12.01"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                        />
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/>
+                        <path d="M12 10V16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                        <path d="M12 7H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
                 </div>
 
@@ -269,7 +188,7 @@
                     class="prose max-w-none text-sm
                            prose-p:my-0
                            prose-p:leading-7
-                           prose-p:text-gray-600
+                           prose-p:text-gray-700
                            prose-a:font-semibold
                            prose-a:text-black
                            prose-a:underline
