@@ -31,6 +31,7 @@
     <div class="overflow-hidden bg-[#f6f6f7] text-[#121212]">
 
         @include(front_view('pages.monobank.hero'))
+        @include(front_view('pages.monobank.product-info'))
         @include(front_view('pages.monobank.benefits'))
         @include(front_view('pages.monobank.conditions'))
         @include(front_view('pages.monobank.steps'))
