@@ -1,6 +1,6 @@
 @extends(front_view('layouts.app'))
 
-@section('title', st('checkout.payparts.order_title', 'РћРїР»Р°С‚Р° С‡Р°СЃС‚РёРЅР°РјРё Р·Р°РјРѕРІР»РµРЅРЅСЏ в„–') . ' ' . $order->id)
+@section('title', st('checkout.payparts.order_title', 'Оплата частинами замовлення №') . ' ' . $order->id)
 
 @section('content')
     <div class="mx-auto desk:w-[1208px] max-w-full p-2">
@@ -23,18 +23,18 @@
         @endphp
 
         <h1 class="mb-4 text-2xl font-semibold">
-            {{ st('checkout.payparts.order_title', 'РћРїР»Р°С‚Р° С‡Р°СЃС‚РёРЅР°РјРё Р·Р°РјРѕРІР»РµРЅРЅСЏ в„–') }} {{ $order->id }}
+            {{ st('checkout.payparts.order_title', 'Оплата частинами замовлення №') }} {{ $order->id }}
         </h1>
 
         <div class="mb-4 text-[16px]">
-            {{ st('checkout.liqpay.amount_to_pay', 'Р”Рѕ СЃРїР»Р°С‚Рё') }}:
-            <strong>{{ number_format($order->grand_total, 2, ',', ' ') }} {{ st('cart.summary.currency_short', 'РіСЂРЅ') }}</strong>
+            {{ st('checkout.liqpay.amount_to_pay', 'До сплати') }}:
+            <strong>{{ number_format($order->grand_total, 2, ',', ' ') }} {{ st('cart.summary.currency_short', 'грн') }}</strong>
         </div>
 
         <div class="rounded-xl bg-white p-5 shadow">
             @if ($bank)
                 <div class="mb-4 text-sm text-[#6B7280]">
-                    {{ st('checkout.payparts.bank', 'Р‘Р°РЅРє') }}:
+                    {{ st('checkout.payparts.bank', 'Банк') }}:
                     <span class="font-semibold text-[#272828]">{{ $bankName }}</span>
                 </div>
             @endif
@@ -54,7 +54,7 @@
                     href="{{ $checkoutRoute }}"
                     class="mt-4 inline-flex h-10 items-center rounded-full border border-gray-300 px-5 text-sm font-semibold text-[#272828]"
                 >
-                    {{ st('checkout.payparts.back_to_checkout', 'РџРѕРІРµСЂРЅСѓС‚РёСЃСЏ РґРѕ РѕС„РѕСЂРјР»РµРЅРЅСЏ') }}
+                    {{ st('checkout.payparts.back_to_checkout', 'Повернутися до оформлення') }}
                 </a>
             @elseif ($emailRequired)
                 <div class="mb-4 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-900">
@@ -102,14 +102,14 @@
                 @endif
                 <p class="mb-3 text-sm text-[#6B7280]">
                     {{ $isMonoPayparts
-                        ? st('checkout.payparts.monobank_push_hint', 'Confirm payment by parts in the monobank app. Keep this page open while we wait for bank confirmation.')
-                        : st('checkout.payparts.redirect_hint', 'Open the bank page in a new tab and confirm payment by parts. Keep this page open while we wait for bank confirmation.') }}
+                        ? st('checkout.payparts.monobank_push_hint', 'Підтвердьте покупку частинами у застосунку monobank. Цю сторінку не закривайте: ми очікуємо підтвердження від банку.')
+                        : st('checkout.payparts.redirect_hint', 'Відкрийте сторінку ПриватБанку в новій вкладці та підтвердьте оплату частинами. Цю сторінку не закривайте: ми очікуємо підтвердження від банку.') }}
                 </p>
 
                 <p id="payparts-waiting-status" class="mb-4 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-900">
                     {{ $isMonoPayparts
-                        ? st('checkout.payparts.waiting_monobank', 'Waiting for confirmation in the monobank app...')
-                        : st('checkout.payparts.waiting_bank', 'Waiting for bank confirmation...') }}
+                        ? st('checkout.payparts.waiting_monobank', 'Очікуємо підтвердження у застосунку monobank...')
+                        : st('checkout.payparts.waiting_bank', 'Очікуємо підтвердження від ПриватБанку...') }}
                 </p>
 
                 @if ($paymentUrl)
@@ -120,18 +120,18 @@
                         rel="noopener noreferrer"
                         class="inline-flex h-11 items-center rounded-full bg-[#FF7500] px-6 text-sm font-semibold text-white transition hover:bg-[#e56700]"
                     >
-                        {{ st('checkout.payparts.go_to_bank', 'Open bank') }}
+                        {{ st('checkout.payparts.go_to_bank', 'Відкрити банк') }}
                     </a>
                 @endif
             @else
                 <div class="rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-900">
-                    {{ st('checkout.payparts.prepare_failed', 'РќРµ РІРґР°Р»РѕСЃСЏ РїС–РґРіРѕС‚СѓРІР°С‚Рё РїРµСЂРµС…С–Рґ РґРѕ Р±Р°РЅРєСѓ. РЎРїСЂРѕР±СѓР№С‚Рµ С‰Рµ СЂР°Р·.') }}
+                    {{ st('checkout.payparts.prepare_failed', 'Не вдалося підготувати перехід до банку. Спробуйте ще раз.') }}
                 </div>
             @endif
         </div>
 
         <p class="mt-4 text-sm text-gray-500">
-            {{ st('checkout.payparts.return_after_success', 'РџС–СЃР»СЏ РїС–РґС‚РІРµСЂРґР¶РµРЅРЅСЏ Р±Р°РЅРєСѓ РјРё Р°РІС‚РѕРјР°С‚РёС‡РЅРѕ РІС–РґРєСЂРёС”РјРѕ СЃС‚РѕСЂС–РЅРєСѓ СѓСЃРїС–С€РЅРѕРіРѕ Р·Р°РјРѕРІР»РµРЅРЅСЏ.') }}
+            {{ st('checkout.payparts.return_after_success', 'Після підтвердження банку ми автоматично відкриємо сторінку успішного замовлення.') }}
         </p>
     </div>
 
@@ -165,12 +165,12 @@
 
                                 if (data.failed && statusBox) {
                                     statusBox.className = 'mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800';
-                                    statusBox.textContent = @json(st('checkout.payparts.failed_status', 'Р‘Р°РЅРє РЅРµ РїС–РґС‚РІРµСЂРґРёРІ РѕРїР»Р°С‚Сѓ С‡Р°СЃС‚РёРЅР°РјРё. РЎРїСЂРѕР±СѓР№С‚Рµ С‰Рµ СЂР°Р· Р°Р±Рѕ РѕР±РµСЂС–С‚СЊ С–РЅС€РёР№ СЃРїРѕСЃС–Р± РѕРїР»Р°С‚Рё.'));
+                                    statusBox.textContent = @json(st('checkout.payparts.failed_status', 'Банк не підтвердив оплату частинами. Спробуйте ще раз або оберіть інший спосіб оплати.'));
                                     return;
                                 }
 
                                 if (attempts >= 80 && statusBox) {
-                                    statusBox.textContent = @json(st('checkout.payparts.long_waiting_bank', 'РџС–РґС‚РІРµСЂРґР¶РµРЅРЅСЏ С‰Рµ РЅРµ РЅР°РґС–Р№С€Р»Рѕ. РЇРєС‰Рѕ РІРё РІР¶Рµ Р·Р°РІРµСЂС€РёР»Рё РѕС„РѕСЂРјР»РµРЅРЅСЏ РІ Р±Р°РЅРєСѓ, Р·Р°С‡РµРєР°Р№С‚Рµ С‰Рµ С‚СЂРѕС…Рё Р°Р±Рѕ РѕРЅРѕРІС–С‚СЊ СЃС‚РѕСЂС–РЅРєСѓ.'));
+                                    statusBox.textContent = @json(st('checkout.payparts.long_waiting_bank', 'Підтвердження ще не надійшло. Якщо ви вже завершили оформлення в банку, зачекайте ще трохи або оновіть сторінку.'));
                                 }
                             })
                             .catch(() => {});
