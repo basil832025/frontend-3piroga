@@ -82,16 +82,16 @@
             {{-- Информация о заказе — по центру, как в Figma --}}
             <div class="grid grid-cols-[auto_auto] gap-x-8 gap-y-2 justify-center text-[15px] leading-[18px] text-[#4B5563] mb-6">
 
-                <div class="text-right font-medium text-[#929292]">{{ st('order.success.order_code', 'Код заказа') }}:</div>
+                <div class="text-right font-medium text-[#929292]">{{ st('cart.order.success.order_code', 'Номер заказа') }}:</div>
                 <div class="text-[#111827]">#{{ $order->number }}</div>
 
-                <div class="text-right font-medium text-[#929292]">{{ st('order.success.date', 'Дата') }}:</div>
+                <div class="text-right font-medium text-[#929292]">{{ st('cart.order.success.date', 'Дата') }}:</div>
                 <div class="text-[#111827]">
                     {{ $dateStr }}
                 </div>
 
                 @if($timeStr !== '')
-                    <div class="text-right font-medium text-[#929292]">{{ st('order.success.delivery_time', 'Час доставки') }}:</div>
+                    <div class="text-right font-medium text-[#929292]">{{ st('cart.order.success.delivery_time', 'Час доставки') }}:</div>
                     <div class="text-[#111827]">
                         {{ $timeStr }}
                     </div>
