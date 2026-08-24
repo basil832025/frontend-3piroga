@@ -61,8 +61,18 @@
             {{-- Информация о заказе --}}
             @php
                 $total   = (float)($order->grand_total ?? $order->total_price_sale ?? $order->total_price ?? 0);
-                $placedAt = $order->placedAt();
-                $dateStr = $placedAt?->format('d.m.Y') ?? '';
+                $deliveryDate = $order->date_order;
+                $dateStr = $deliveryDate
+                    ? ($deliveryDate instanceof \DateTimeInterface
+                        ? $deliveryDate->format('d.m.Y')
+                        : \Carbon\Carbon::parse((string) $deliveryDate)->format('d.m.Y'))
+                    : '';
+                $deliveryTime = $order->time_order;
+                $timeStr = $deliveryTime
+                    ? ($deliveryTime instanceof \DateTimeInterface
+                        ? $deliveryTime->format('H:i')
+                        : \Carbon\Carbon::parse((string) $deliveryTime)->format('H:i'))
+                    : '';
                 $number  = $order->number ?? ('#'.str_pad($order->id, 5, '0', STR_PAD_LEFT));
 
                 $payLabel = $order->payment?->label(app()->getLocale()) ?? '—';
@@ -79,6 +89,13 @@
                 <div class="text-[#111827]">
                     {{ $dateStr }}
                 </div>
+
+                @if($timeStr !== '')
+                    <div class="text-right font-medium text-[#929292]">{{ st('order.success.delivery_time', 'Час доставки') }}:</div>
+                    <div class="text-[#111827]">
+                        {{ $timeStr }}
+                    </div>
+                @endif
 
                 <div class="text-right font-medium text-[#929292]">{{ st('order.success.amount_to_pay', 'Сумма к оплате') }}:</div>
                 <div class="text-[#111827]">{{ $total }} грн</div>
