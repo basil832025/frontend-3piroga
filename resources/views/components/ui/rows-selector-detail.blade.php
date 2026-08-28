@@ -15,15 +15,20 @@
 @php
     // базовая подготовка (для инициализации стора и кнопок)
     $rootId  = $rootId ?? ($rows[0]['product_id'] ?? null);
-    $rootKey = $rootId !== null ? (string)$rootId : '';
+    $rootKey = (string) ($rows[0]['variant_key'] ?? $rootId ?? '');
 
     // карта цен (нужна родителю/стору)
     $priceMap = [];
+    $productIdMap = [];
+    $metaMap = [];
     foreach ($rows as $row) {
-        $priceMap[(string)$row['product_id']] = [
+        $rowKey = (string) ($row['variant_key'] ?? $row['product_id'] ?? '');
+        $priceMap[$rowKey] = [
             'price' => (float)($row['price'] ?? 0),
             'old'   => isset($row['old_price']) ? (float)$row['old_price'] : null,
         ];
+        $productIdMap[$rowKey] = (int) ($row['cart_product_id'] ?? $row['product_id'] ?? 0);
+        $metaMap[$rowKey] = is_array($row['cart_meta'] ?? null) ? $row['cart_meta'] : [];
     }
 
     // раскладка характеристик: 1–2 слева, 3-я справа
@@ -42,6 +47,8 @@
             const init = {
                 selected: '{{ $rootKey }}',
                 prices: @js($priceMap),
+                productIds: @js($productIdMap),
+                metas: @js($metaMap),
                 fmt(v){ const n=Number(v||0); const parts=n.toFixed(2).split('.'); return {uah: parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,' '), kop: parts[1]}; },
                 price(){ const p=this.prices[this.selected]; return p?.price ?? {{ (float)$defaultPrice }}; },
                 old(){ const p=this.prices[this.selected]; return (p?.old && p.old > (p?.price ?? 0)) ? p.old : null; },
@@ -52,6 +59,8 @@
                 // мягкое обновление, если стор уже есть
                 const s = Alpine.store(name);
                 s.prices   = s.prices ?? init.prices;
+                s.productIds = s.productIds ?? init.productIds;
+                s.metas = s.metas ?? init.metas;
                 s.selected = s.selected ?? init.selected;
                 s.fmt      = s.fmt ?? init.fmt;
                 s.price    = s.price ?? init.price;
@@ -64,7 +73,7 @@
         {{-- КНОПКИ-«ПИЛЮЛИ»: на мобиле 1 кол., на md+ — 2 колонки, одинаковой ширины --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-2 min-w-[292px] text-xs">
             @foreach($rows as $r)
-                @php $id = (string)($r['product_id']); @endphp
+                @php $id = (string)($r['variant_key'] ?? $r['product_id'] ?? ''); @endphp
                 <button
                     type="button"
                     x-on:click="$store['{{ $store }}'].selected='{{ $id }}'"

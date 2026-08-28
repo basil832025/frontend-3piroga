@@ -23,10 +23,10 @@
     };
 
     $rootId   = $rootId ?? ($rows[0]['product_id'] ?? null);
-    $selectedId = $rows[0]['product_id'] ?? $rootId;
+    $selectedId = $rows[0]['variant_key'] ?? $rows[0]['product_id'] ?? $rootId;
     $rootKey  = $selectedId !== null ? (string)$selectedId : '';
     $rootRow  = null;
-    if ($rootId) foreach ($rows as $r) if (($r['product_id'] ?? null) === $rootId) { $rootRow = $r; break; }
+    if ($rootKey !== '') foreach ($rows as $r) if ((string)($r['variant_key'] ?? $r['product_id'] ?? '') === $rootKey) { $rootRow = $r; break; }
     $rootRow ??= $rows[0] ?? ['price'=>$defaultPrice,'old_price'=>$defaultOldPrice,'product_id'=>null];
 
     // Для одного варианта уменьшаем отступы
@@ -37,11 +37,16 @@
     $op = ($rootRow['old_price'] ?? null) && ($rootRow['old_price'] > ($rootRow['price'] ?? 0)) ? $fmt($rootRow['old_price']) : null;
 
     $priceMap = [];
+    $productIdMap = [];
+    $metaMap = [];
     foreach ($rows as $row) {
-        $priceMap[(string)$row['product_id']] = [
+        $rowKey = (string) ($row['variant_key'] ?? $row['product_id'] ?? '');
+        $priceMap[$rowKey] = [
             'price' => (float)($row['price'] ?? 0),
             'old'   => isset($row['old_price']) ? (float)$row['old_price'] : null,
         ];
+        $productIdMap[$rowKey] = (int) ($row['cart_product_id'] ?? $row['product_id'] ?? 0);
+        $metaMap[$rowKey] = is_array($row['cart_meta'] ?? null) ? $row['cart_meta'] : [];
     }
 
     // ********** ВАЖНЫЙ ПАТЧ: persons ВСЕГДА СПРАВА **********
@@ -65,6 +70,8 @@
         x-data="{
         selected: @js($rootKey),
         prices:   @js($priceMap),
+        productIds: @js($productIdMap),
+        metas: @js($metaMap),
 
         fmt(v){
             const n = Number(v||0);
@@ -74,6 +81,23 @@
 
         adding: false,
         cartQty: 0,
+
+        selectedProductId() {
+            return Number(this.productIds[this.selected] ?? this.selected ?? 0);
+        },
+
+        selectedMeta() {
+            return this.metas[this.selected] ?? {};
+        },
+
+        sameVariant(item) {
+            const productId = this.selectedProductId();
+            if (Number(item?.product_id ?? 0) !== productId) return false;
+            const selectedVolume = String(this.selectedMeta()?.volume ?? '').trim().toLowerCase();
+            if (!selectedVolume) return true;
+            const itemVolume = String(item?.meta?.volume ?? item?.meta?.cart_label ?? '').trim().toLowerCase();
+            return itemVolume === selectedVolume;
+        },
 
         init() {
             this.$watch('selected', (newVal) => {
@@ -119,10 +143,10 @@
             });
 
             window.addEventListener('cart-updated', (e) => {
-                if (e?.detail?.item?.product_id === parseInt(this.selected)) {
+                if (this.sameVariant(e?.detail?.item)) {
                     this.cartQty = e.detail.item?.qty ?? 0;
                 } else if (e?.detail?.items) {
-                    const item = e.detail.items.find(i => parseInt(i.product_id) === parseInt(this.selected));
+                    const item = e.detail.items.find(i => this.sameVariant(i));
                     if (item) {
                         this.cartQty = item.qty ?? 0;
                     }
@@ -138,13 +162,13 @@
                         headers: { 'Accept': 'application/json' }
                     });
                     const data = await res.json();
-                    const item = (data?.items ?? []).find(i => parseInt(i.product_id) === parseInt(this.selected));
+                    const item = (data?.items ?? []).find(i => this.sameVariant(i));
                     this.cartQty = item?.qty ?? 0;
                     return;
                 }
 
                 const data = await cache.get();
-                const item = (data?.items ?? []).find(i => parseInt(i.product_id) === parseInt(this.selected));
+                const item = (data?.items ?? []).find(i => this.sameVariant(i));
                 this.cartQty = item?.qty ?? 0;
             } catch (e) {
                 this.cartQty = 0;
@@ -157,9 +181,10 @@
 
             try {
                 const data = await window.CartAPI.add('{{ route('cart.add') }}', {
-                    product_id: this.selected,
+                    product_id: this.selectedProductId(),
                     qty: 1,
                     price: this.prices[this.selected]?.price ?? null,
+                    meta: this.selectedMeta(),
                 });
 
                 this.cartQty = data?.item?.qty ?? 1;
@@ -180,9 +205,10 @@
 
             try {
                 const data = await window.CartAPI.add('{{ route('cart.add') }}', {
-                    product_id: this.selected,
+                    product_id: this.selectedProductId(),
                     qty: 1,
                     price: this.prices[this.selected]?.price ?? null,
+                    meta: this.selectedMeta(),
                 });
 
                 this.cartQty = data?.item?.qty ?? this.cartQty + 1;
@@ -201,9 +227,10 @@
 
             try {
                 const data = await window.CartAPI.add('{{ route('cart.add') }}', {
-                    product_id: this.selected,
+                    product_id: this.selectedProductId(),
                     qty: -1,
                     price: this.prices[this.selected]?.price ?? null,
+                    meta: this.selectedMeta(),
                 });
 
                 this.cartQty = data?.item?.qty ?? Math.max(0, this.cartQty - 1);
@@ -222,7 +249,7 @@
         <div class="flex flex-col gap-2">
         @foreach ($rows as $r)
             @php
-                $rowValue = (string) ($r['product_id'] ?? '');
+                $rowValue = (string) ($r['variant_key'] ?? $r['product_id'] ?? '');
             @endphp
             <button
                 type="button"
@@ -316,7 +343,7 @@
                     x-cloak
                     class="w-full inline-flex items-center justify-center text-[12px] h-[36px] gap-2 rounded bg-[#FF7500] px-4 font-semibold text-white shadow-[0_4px_12px_rgba(255,117,0,.35)] transition
                hover:bg-[#ff841f] active:bg-[#e66700] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF7500]/50 disabled:opacity-60"
-                    x-bind:data-product-id="selected"
+                    x-bind:data-product-id="selectedProductId()"
                     @click="addToCart"
                     x-bind:disabled="adding"
                 >

@@ -48,24 +48,29 @@
 
         // подготовка стора
         $rootId  = $rootId ?? ($rows[0]['product_id'] ?? null);
-        $rootKey = $rootId !== null ? (string)$rootId : '';
+        $rootKey = (string) ($rows[0]['variant_key'] ?? $rootId ?? '');
         $priceMap = [];
+        $productIdMap = [];
+        $metaMap = [];
         $productKeyMap = [];
         $articleMap = [];
         $badgeMap = [];
         $manualDiscountMap = [];
         foreach ($rows as $row) {
-            $priceMap[(string)$row['product_id']] = [
+            $rowKey = (string) ($row['variant_key'] ?? $row['product_id'] ?? '');
+            $priceMap[$rowKey] = [
                 'price' => (float)($row['price'] ?? 0),
                 'old'   => isset($row['old_price']) ? (float)$row['old_price'] : null,
             ];
-            $productKeyMap[(string)$row['product_id']] = trim((string) ($row['product_key'] ?? $row['article'] ?? $row['product_id']));
-            $manualDiscountMap[(string)$row['product_id']] = isset($row['manual_discount_percent']) && $row['manual_discount_percent'] !== null && $row['manual_discount_percent'] !== ''
+            $productIdMap[$rowKey] = (int) ($row['cart_product_id'] ?? $row['product_id'] ?? 0);
+            $metaMap[$rowKey] = is_array($row['cart_meta'] ?? null) ? $row['cart_meta'] : [];
+            $productKeyMap[$rowKey] = trim((string) ($row['product_key'] ?? $row['article'] ?? $row['product_id']));
+            $manualDiscountMap[$rowKey] = isset($row['manual_discount_percent']) && $row['manual_discount_percent'] !== null && $row['manual_discount_percent'] !== ''
                 ? round((float) $row['manual_discount_percent'])
                 : null;
-            $articleMap[(string)$row['product_id']] = trim((string)($row['article'] ?? ''));
+            $articleMap[$rowKey] = trim((string)($row['article'] ?? ''));
 
-            $badgeMap[(string)$row['product_id']] = [
+            $badgeMap[$rowKey] = [
                 'is_spicy' => (bool)($row['is_spicy'] ?? false),
                 'is_new' => (bool)($row['is_new'] ?? false),
                 'is_promo' => (bool)($row['is_promo'] ?? false),
@@ -110,6 +115,8 @@
             Alpine.store('sku', {
                 selected: '{{ $rootKey }}',
                 prices: @js($priceMap),
+                productIds: @js($productIdMap),
+                metas: @js($metaMap),
                 productKeys: @js($productKeyMap),
                 articles: @js($articleMap),
                 badges: @js($badgeMap),
@@ -122,6 +129,20 @@
                 fmt(v){ const n=Number(v||0); const parts=n.toFixed(2).split('.'); return { uah: parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,' '), kop: parts[1] }; },
                 price(){ const p=this.prices[this.selected]; return p?.price ?? {{ $defaultPrice }}; },
                 old(){ const p=this.prices[this.selected]; return (p?.old && p.old > (p?.price ?? 0)) ? p.old : null; },
+                selectedProductId(){
+                    return Number(this.productIds[this.selected] ?? this.selected ?? 0);
+                },
+                selectedMeta(){
+                    return this.metas[this.selected] ?? {};
+                },
+                sameVariant(item){
+                    const productId = this.selectedProductId();
+                    if (Number(item?.product_id ?? 0) !== productId) return false;
+                    const selectedVolume = String(this.selectedMeta()?.volume ?? '').trim().toLowerCase();
+                    if (!selectedVolume) return true;
+                    const itemVolume = String(item?.meta?.volume ?? item?.meta?.cart_label ?? '').trim().toLowerCase();
+                    return itemVolume === selectedVolume;
+                },
                 article(){
                     const value = this.articles[this.selected];
                     if (typeof value === 'string' && value.trim() !== '') return value;
@@ -282,11 +303,10 @@
 
                                 // Слушаем обновления корзины
                                 window.addEventListener('cart-updated', (e) => {
-                                    const selectedId = $store.sku?.selected || '{{ $rootId ?? 0 }}';
-                                    if (e?.detail?.item?.product_id === parseInt(selectedId)) {
+                                    if ($store.sku?.sameVariant(e?.detail?.item)) {
                                         this.cartQty = e.detail.item?.qty ?? 0;
                                     } else if (e?.detail?.items) {
-                                        const item = e.detail.items.find(i => parseInt(i.product_id) === parseInt(selectedId));
+                                        const item = e.detail.items.find(i => $store.sku?.sameVariant(i));
                                         if (item) {
                                             this.cartQty = item.qty ?? 0;
                                         }
@@ -310,8 +330,7 @@
                                         });
                                         data = await res.json();
                                     }
-                                    const selectedId = $store.sku?.selected || '{{ $rootId ?? 0 }}';
-                                    const item = (data?.items ?? []).find(i => parseInt(i.product_id) === parseInt(selectedId));
+                                    const item = (data?.items ?? []).find(i => $store.sku?.sameVariant(i));
                                     this.cartQty = item?.qty ?? 0;
                                 } catch (e) {
                                     this.cartQty = 0;
@@ -322,7 +341,9 @@
                                 this.adding = true;
 
                                 try {
-                                    const pid = $store.sku?.selected || '{{ $rootId ?? 0 }}';
+                                    const pid = typeof $store.sku?.selectedProductId === 'function'
+                                        ? $store.sku.selectedProductId()
+                                        : '{{ $rootId ?? 0 }}';
                                     const price = typeof $store.sku?.price === 'function'
                                         ? Number($store.sku.price() || 0)
                                         : null;
@@ -330,6 +351,7 @@
                                         product_id: pid,
                                         qty: 1,
                                         price: price,
+                                        meta: typeof $store.sku?.selectedMeta === 'function' ? $store.sku.selectedMeta() : {},
                                     });
                                     this.cartQty = data?.item?.qty ?? 1;
                                 } catch (e) {
@@ -344,7 +366,9 @@
                                 this.adding = true;
 
                                 try {
-                                    const pid = $store.sku?.selected || '{{ $rootId ?? 0 }}';
+                                    const pid = typeof $store.sku?.selectedProductId === 'function'
+                                        ? $store.sku.selectedProductId()
+                                        : '{{ $rootId ?? 0 }}';
                                     const price = typeof $store.sku?.price === 'function'
                                         ? Number($store.sku.price() || 0)
                                         : null;
@@ -352,6 +376,7 @@
                                         product_id: pid,
                                         qty: 1,
                                         price: price,
+                                        meta: typeof $store.sku?.selectedMeta === 'function' ? $store.sku.selectedMeta() : {},
                                     });
                                     this.cartQty = data?.item?.qty ?? this.cartQty + 1;
                                 } catch (e) {
@@ -366,7 +391,9 @@
                                 this.adding = true;
 
                                 try {
-                                    const pid = $store.sku?.selected || '{{ $rootId ?? 0 }}';
+                                    const pid = typeof $store.sku?.selectedProductId === 'function'
+                                        ? $store.sku.selectedProductId()
+                                        : '{{ $rootId ?? 0 }}';
                                     const price = typeof $store.sku?.price === 'function'
                                         ? Number($store.sku.price() || 0)
                                         : null;
@@ -374,6 +401,7 @@
                                         product_id: pid,
                                         qty: -1,
                                         price: price,
+                                        meta: typeof $store.sku?.selectedMeta === 'function' ? $store.sku.selectedMeta() : {},
                                     });
                                     this.cartQty = data?.item?.qty ?? Math.max(0, this.cartQty - 1);
                                 } catch (e) {

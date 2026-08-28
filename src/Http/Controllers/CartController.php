@@ -28,14 +28,16 @@ class CartController extends Controller
 
         $qty   = (int) $r->input('qty', 1);
         $price = $r->has('price') ? (float) $r->input('price') : null;
+        $meta = $r->input('meta', []);
+        $meta = is_array($meta) ? $meta : [];
 
         // Если передан параметр set=true, устанавливаем абсолютное количество
         if ($r->boolean('set', false)) {
-            $payload = $this->cart->setQty($pid, $qty, $price);
+            $payload = $this->cart->setQty($pid, $qty, $price, $meta);
         } else {
             // Иначе добавляем/уменьшаем количество (может быть отрицательным для уменьшения)
             // CartService::add поддерживает отрицательные значения для уменьшения количества
-            $payload = $this->cart->add($pid, $qty, $price);
+            $payload = $this->cart->add($pid, $qty, $price, $meta);
         }
 
         // Для AJAX/JSON-запросов возвращаем JSON как раньше

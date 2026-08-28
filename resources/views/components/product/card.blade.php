@@ -42,12 +42,12 @@
     $badgeMap = [];
     $manualDiscountMap = [];
     $initialDiscount = null;
-    $initialProductId = (string)($rows[0]['product_id'] ?? ($pid ?: ''));
+    $initialProductId = (string)($rows[0]['variant_key'] ?? $rows[0]['product_id'] ?? ($pid ?: ''));
 
     // Проверяем все варианты на наличие старой цены
     if (!empty($rows)) {
         foreach ($rows as $row) {
-            $rowId = (string)($row['product_id'] ?? '');
+            $rowId = (string)($row['variant_key'] ?? $row['product_id'] ?? '');
             $rowPrice = (float)($row['price'] ?? 0);
             // Проверяем old_price более тщательно
             $rowOldPrice = null;
@@ -113,7 +113,7 @@
         activeBadges: [],
         rootId: @js($pid),
         init() {
-            const initialProductId = @js((string)($rows[0]['product_id'] ?? ($pid ?: '')));
+            const initialProductId = @js((string)($rows[0]['variant_key'] ?? $rows[0]['product_id'] ?? ($pid ?: '')));
             if (initialProductId) {
                 this.updateDiscount(initialProductId);
                 this.updateBadges(initialProductId);
