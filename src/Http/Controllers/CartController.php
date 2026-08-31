@@ -134,8 +134,10 @@ public function remove(Request $r)
 {
     $pid = $r->integer('product_id');
     $all = $r->boolean('all', false);
+    $meta = $r->input('meta', []);
+    $meta = is_array($meta) ? $meta : [];
 
-    $payload = $this->cart->remove($pid, $all);
+    $payload = $this->cart->remove($pid, $meta, $all);
 
     return response()->json($payload);
 }

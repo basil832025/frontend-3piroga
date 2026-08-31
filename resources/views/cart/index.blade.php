@@ -186,7 +186,7 @@
                                 <button
                                     class="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100"
                                     title="Видалити"
-                                    @click.prevent="del({{ $pid }})"
+                                    @click.prevent="del({{ $pid }}, $event)"
                                 >
                                     <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <rect x="0.5" y="0.5" width="31" height="31" rx="3.5" fill="white"/>

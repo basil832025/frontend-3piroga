@@ -65,10 +65,10 @@ export default function registerCartActions(Alpine) {
                 // A) пришёл item (inc/dec/set)
                 if (data && data.item) {
                     const it  = data.item;
-                    const row = document.querySelector(`[data-cart-item="${it.product_id}"]`);
+                    const row = this.$root.querySelector(`[data-cart-item="${it.product_id}"]`);
                     if (row) {
                         if (data.removed || Number(it.qty) <= 0) {
-                            row.remove();
+                            (payload._row || row).remove();
                         } else {
                             const input = row.querySelector('[data-cart-qty-input]');
                             if (input) input.value = String(it.qty ?? '');
@@ -93,29 +93,35 @@ export default function registerCartActions(Alpine) {
                 else if (data?.removed) {
                     const id = data.id ?? payload.product_id ?? payload.id;
                     if (id != null) {
-                        const row = document.querySelector(`[data-cart-item="${id}"]`);
-                        if (row) row.remove();
+                            const row = payload._row || this.$root.querySelector(`[data-cart-item="${id}"]`);
+                            if (row) row.remove();
                     }
                 }
 
                 // итоги
+                const hasQty = data && ('qty' in data || 'total_qty' in data);
+                const hasTotal = data && ('total_price' in data || 'total' in data);
                 const qty   = Number(data?.qty ?? data?.total_qty ?? 0);
                 const total = Number(data?.total_price ?? data?.total ?? 0);
 
                 // обновим store (бейдж)
                 if (window.Alpine?.store('cart')) {
-                    Alpine.store('cart').setQty(qty);
-                    Alpine.store('cart').setTotal(total);
+                    if (hasQty) Alpine.store('cart').setQty(qty);
+                    if (hasTotal) Alpine.store('cart').setTotal(total);
                 }
 
                 // итог в этом виджете
-                const totalEl = document.querySelector('[data-cart-total]');
-                if (totalEl) totalEl.textContent = this.money(total);
+                const totalEls = document.querySelectorAll('[data-cart-total]');
+                if (hasTotal) {
+                    totalEls.forEach((totalEl) => {
+                        totalEl.textContent = this.money(total);
+                    });
+                }
 
                 // пустое состояние
-                const listEl  = document.querySelector('[data-cart-list]');
-                const emptyEl = document.querySelector('[data-cart-empty]');
-                if (listEl && emptyEl) {
+                const listEl  = this.$root.querySelector('[data-cart-list]');
+                const emptyEl = this.$root.querySelector('[data-cart-empty]');
+                if (listEl && emptyEl && hasQty) {
                     if (qty <= 0) {
                         listEl.classList.add('hidden');
                         emptyEl.classList.remove('hidden');
@@ -141,7 +147,7 @@ export default function registerCartActions(Alpine) {
         },
         // 🔎 помощник — находим инпут по товару
         findQtyInput(id) {
-            return document.querySelector(`[data-cart-item="${id}"] [data-cart-qty-input]`);
+            return this.$root.querySelector(`[data-cart-item="${id}"] [data-cart-qty-input]`);
         },
         // При ручном вводе разрешаем пустое значение, валидация только при blur
         onQtyInput(id, el) {
@@ -189,10 +195,14 @@ export default function registerCartActions(Alpine) {
             }
             return this._send(this.addUrl, { product_id: id, qty: -1 });
         },
-        del(id)      { return this._send(this.removeUrl, { product_id: id, all: true, id }); },
+        del(id, event = null) {
+            const row = event?.currentTarget?.closest('[data-cart-item]') || null;
+            return this._send(this.removeUrl, { product_id: id, all: true, id, _row: row });
+        },
 
         async _send(url, payload) {
             let data = {};
+            const { _row, ...requestPayload } = payload;
             try {
                 const csrf = await resolveCsrfToken();
                 const res = await fetch(url, {
@@ -203,7 +213,7 @@ export default function registerCartActions(Alpine) {
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': csrf,
                     },
-                    body: JSON.stringify(payload),
+                    body: JSON.stringify(requestPayload),
                 });
                 const text = await res.text();
                 try { data = JSON.parse(text); } catch { data = {}; }

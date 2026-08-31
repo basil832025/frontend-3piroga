@@ -193,7 +193,7 @@
                         <button
                             class="order-3 w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100"
                             title="{{ st('cart.item.delete', 'Видалити') }}"
-                            @click.prevent="del({{ $pid }})"
+                            @click.prevent="del({{ $pid }}, $event)"
                         >
                             {{-- svg как есть --}}
                             <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
