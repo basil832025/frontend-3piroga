@@ -200,6 +200,29 @@ export default function registerCartActions(Alpine) {
             return this._send(this.removeUrl, { product_id: id, all: true, id, _row: row });
         },
 
+        async refreshInfo() {
+            try {
+                if (window.__CART_CACHE__ && typeof window.__CART_CACHE__.invalidate === 'function') {
+                    window.__CART_CACHE__.invalidate();
+                }
+
+                const res = await fetch('/cart/info', {
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    cache: 'no-store',
+                });
+                const data = await res.json().catch(() => ({}));
+                this.patchDom(data, {});
+
+                return data;
+            } catch (e) {
+                console.error('cart.refreshInfo error:', e);
+                return {};
+            }
+        },
+
         async _send(url, payload) {
             let data = {};
             const { _row, ...requestPayload } = payload;
@@ -221,6 +244,9 @@ export default function registerCartActions(Alpine) {
                 console.error('cart._send error:', e);
             }
             this.patchDom(data, payload);
+            if (requestPayload.all && requestPayload.product_id) {
+                await this.refreshInfo();
+            }
             return data;
         },
     }));
