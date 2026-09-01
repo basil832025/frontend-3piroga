@@ -64,8 +64,12 @@
                     }
                     
                     // Получаем характеристики с SVG иконками для размера и веса
-                    $variantChars = [];
-                    if ($pid) {
+                    $variantChars = collect(data_get($it, 'variant_chars', []))
+                        ->filter(fn ($char) => is_array($char) && trim((string) ($char['value'] ?? '')) !== '')
+                        ->values()
+                        ->all();
+
+                    if (empty($variantChars) && $pid) {
                         $product = \App\Models\Shop\Product::with([
                             'productCharacteristicValues.characteristic:id,slug,svg_image_id',
                             'productCharacteristicValues.characteristic.svgImage',
@@ -73,7 +77,7 @@
                         ])->find($pid);
                         if ($product && $product->relationLoaded('productCharacteristicValues')) {
                             $vals = $product->productCharacteristicValues;
-                            $keep = ['rozmir-pirogiv', 'vaga']; // размер и вес
+                            $keep = ['rozmir-pirogiv', 'rozmiri-insi', 'vaga', 'vaga-grami', 'vaga-setiv', 'obiem', 'obyem', 'volume', 'ml'];
                             foreach ($vals as $v) {
                                 $char = $v->characteristic;
                                 if (!$char) continue;
@@ -119,8 +123,8 @@
                                 <div class="flex flex-row md:flex-col items-center md:items-start gap-2 mt-1 text-xs text-gray-500">
                                     @foreach($variantChars as $char)
                                         <span class="inline-flex items-center gap-1">
-                                            @if($char['svg'])
-                                                <img src="{{ $char['svg'] }}" alt="" aria-hidden="true" class="h-4 w-4 shrink-0 object-contain opacity-60">
+                                    @if($char['svg'] ?? null)
+                                        <img src="{{ $char['svg'] }}" alt="" aria-hidden="true" class="h-4 w-4 shrink-0 object-contain opacity-60">
                                             @endif
                                             <span>{{ $char['value'] }}</span>
                                         </span>

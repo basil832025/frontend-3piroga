@@ -252,6 +252,48 @@ export default function registerCartActions(Alpine) {
     }));
 
     /** Глобальный помощник для кнопок «Добавить в корзину» вне x-data */
+    async function refreshRenderedCart(Alpine) {
+        if (!window.location.pathname.endsWith('/cart')) return;
+
+        try {
+            const res = await fetch('/cart/sidebar', {
+                headers: {
+                    Accept: 'text/html',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                cache: 'no-store',
+            });
+            const html = await res.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const nextList = doc.querySelector('[data-cart-list]');
+            const nextTotal = doc.querySelector('[data-cart-total]');
+
+            if (!nextList) {
+                window.location.reload();
+                return;
+            }
+
+            const currentLists = document.querySelectorAll('[data-cart-list]');
+            if (currentLists.length === 0) {
+                window.location.reload();
+                return;
+            }
+
+            currentLists.forEach((list) => {
+                list.innerHTML = nextList.innerHTML;
+                Alpine.initTree(list);
+            });
+
+            if (nextTotal) {
+                document.querySelectorAll('[data-cart-total]').forEach((total) => {
+                    total.innerHTML = nextTotal.innerHTML;
+                });
+            }
+        } catch (e) {
+            console.error('cart.refreshRenderedCart error', e);
+        }
+    }
+
     if (!window.CartAPI) window.CartAPI = {};
     window.CartAPI.add = async (addUrl, payload = {}) => {
         try {
@@ -276,6 +318,7 @@ export default function registerCartActions(Alpine) {
                 Alpine.store('cart').setTotal(total);
             }
             window.dispatchEvent(new CustomEvent('cart-updated', { detail: data }));
+            await refreshRenderedCart(Alpine);
             return data;
         } catch (e) {
             console.error('CartAPI.add error', e);

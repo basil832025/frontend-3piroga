@@ -146,12 +146,16 @@ document.addEventListener('alpine:init', () => {
                 $name = $it['name'] ?? st('cart.item.default_name', 'Товар');
                 $img  = $it['image'] ?? asset('vendor/frontend-3piroga/images/placeholder-4x3.jpg');
                 $var   = data_get($it, 'variant');
+                $article = trim((string) (data_get($it, 'article') ?: data_get($it, 'sku') ?: data_get($it, 'code2') ?: ''));
                 $price = (float)($it['subtotal'] ?? 0);
                 $uah   = floor($price);
                 $kop   = sprintf('%02d', (int)round(($price - $uah) * 100));
 
                 // Получаем характеристики с SVG иконками для размера и веса, а также старую цену и ссылку на товар
-                $variantChars = [];
+                $variantChars = collect(data_get($it, 'variant_chars', []))
+                    ->filter(fn ($char) => is_array($char) && trim((string) ($char['value'] ?? '')) !== '')
+                    ->values()
+                    ->all();
                 $old = null;
                 $productUrl = null;
                 if ($pid) {
@@ -182,9 +186,9 @@ document.addEventListener('alpine:init', () => {
                         }
 
                         // Получаем характеристики
-                        if ($product->relationLoaded('productCharacteristicValues')) {
+                        if (empty($variantChars) && $product->relationLoaded('productCharacteristicValues')) {
                             $vals = $product->productCharacteristicValues;
-                            $keep = ['rozmir-pirogiv', 'vaga']; // размер и вес
+                            $keep = ['rozmir-pirogiv', 'rozmiri-insi', 'vaga', 'vaga-grami', 'vaga-setiv', 'obiem', 'obyem', 'volume', 'ml'];
                             foreach ($vals as $v) {
                                 $char = $v->characteristic;
                                 if (!$char) continue;
@@ -238,11 +242,17 @@ document.addEventListener('alpine:init', () => {
                             <div class="text-[10px] font-semibold text-[#272828] line-clamp-2">{{ $name }}</div>
                         @endif
 
+                        @if($article)
+                            <div class="mt-1 text-[10px] leading-[14px] text-[#C04103]">
+                                {{ st('cart.item.sku_label', 'Артикул:') }} {{ $article }}
+                            </div>
+                        @endif
+
                         @if(!empty($variantChars))
                             <div class="mt-1 flex flex-row items-center gap-2 text-[12px] text-[#9CA3AF]">
                                 @foreach($variantChars as $char)
                                     <span class="inline-flex items-center gap-1">
-                                        @if($char['svg'])
+                                        @if($char['svg'] ?? null)
                                             <span aria-hidden="true" class="inline-block h-4 w-4 shrink-0"
                                                   style="background-color: currentColor;
                                                       mask-image:url('{{ $char['svg'] }}');-webkit-mask-image:url('{{ $char['svg'] }}');
@@ -280,11 +290,17 @@ document.addEventListener('alpine:init', () => {
                             <div class="text-[10px] font-semibold text-[#272828] line-clamp-2">{{ $name }}</div>
                         @endif
 
+                        @if($article)
+                            <div class="mt-1 text-[10px] leading-[14px] text-[#C04103]">
+                                {{ st('cart.item.sku_label', 'Артикул:') }} {{ $article }}
+                            </div>
+                        @endif
+
                         @if(!empty($variantChars))
                             <div class="mt-1 flex flex-row items-center gap-2 text-[12px] text-[#9CA3AF]">
                                 @foreach($variantChars as $char)
                                     <span class="inline-flex items-center gap-1">
-                        @if($char['svg'])
+                        @if($char['svg'] ?? null)
                                             <span aria-hidden="true" class="inline-block h-4 w-4 shrink-0"
                                                   style="background-color: currentColor;
                                                       mask-image:url('{{ $char['svg'] }}');-webkit-mask-image:url('{{ $char['svg'] }}');
