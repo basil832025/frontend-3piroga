@@ -231,11 +231,25 @@
     <script>eS('init', { TRACKING: false, RECOMS: true });</script>
 </head>
 <body data-page="@yield('page','')" class="antialiased text-gray-900 overflow-x-hidden">
+@php
+    $activeHolidayNotice = \Illuminate\Support\Facades\Schema::hasTable((new \App\Models\Shop\HolidayPeriod())->getTable())
+        ? \App\Models\Shop\HolidayPeriod::query()
+            ->forDate(now('Europe/Kyiv'))
+            ->orderBy('date_from')
+            ->first()
+        : null;
+
+    $activeHolidayNoticePayload = $activeHolidayNotice ? [
+        'id' => $activeHolidayNotice->id,
+        'comment' => $activeHolidayNotice->localizedComment(app()->getLocale()),
+    ] : null;
+@endphp
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5R7VLG9"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 @include(front_view('components.auth.modal'))
+@include(front_view('components.holiday-modal'), ['holidayNotice' => $activeHolidayNoticePayload])
 {{-- Header --}}
 @include(front_view('partials.header'))
 

@@ -190,7 +190,9 @@ function deliveryBlock() {
         mode: 'asap',
         fpDate: null,
         scheduleV2: null,
+        holidays: null,
         availableDates: [],
+        holidayClosedDates: [],
         asapEnabled: true,
 
         allTimeIntervals: [],
@@ -206,6 +208,8 @@ function deliveryBlock() {
 
         init() {
             this.scheduleV2 = window.CHECKOUT_CONFIG?.scheduleV2 || null;
+            this.holidays = window.CHECKOUT_CONFIG?.holidays || null;
+            this.holidayClosedDates = Array.isArray(this.holidays?.closed_dates) ? this.holidays.closed_dates : [];
             // flatpickr locale (RU)
             const ruLocale = {
                 firstDayOfWeek: 1,
@@ -270,6 +274,7 @@ function deliveryBlock() {
                 locale: ruLocale,
                 disableMobile: true,
                 clickOpens: false,
+                disable: this.holidayClosedDates,
 
                 onReady: (_, __, inst) => {
                     inst.altInput.placeholder = this.$refs.date.placeholder || 'Дата*';
@@ -366,6 +371,12 @@ function deliveryBlock() {
                 }
             });
 
+            window.addEventListener('holiday-preorder', () => {
+                this.mode = 'fixed';
+                this.updateFieldsState();
+                this.applyScheduleV2Availability();
+            });
+
             this.applyScheduleV2Availability();
         },
 
@@ -384,7 +395,12 @@ function deliveryBlock() {
 
         applyScheduleV2Availability() {
             const payload = this.getScheduleV2MethodPayload();
-            if (!payload) return;
+            if (!payload) {
+                if (this.fpDate && this.holidayClosedDates.length) {
+                    this.fpDate.set('disable', this.holidayClosedDates);
+                }
+                return;
+            }
 
             this.availableDates = Array.isArray(payload.available_dates) ? payload.available_dates : [];
             this.asapEnabled = !!payload.asap_available;
@@ -399,6 +415,7 @@ function deliveryBlock() {
             }
 
             if (this.fpDate) {
+                this.fpDate.set('disable', this.holidayClosedDates);
                 this.fpDate.set('enable', this.availableDates);
                 if (this.availableDates.length === 0) {
                     this.fpDate.clear();

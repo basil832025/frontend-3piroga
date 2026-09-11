@@ -9,6 +9,7 @@ use App\Models\Shop\Order;
 use App\Models\Shop\Client;
 use App\Models\Shop\ClientAddress;
 use App\Models\Shop\PaypartsBank;
+use App\Models\Shop\HolidayPeriod;
 use App\Enums\OrderStatus;
 use App\Enums\PaypartsBankTypeEnum;
 use App\Models\Location;
@@ -34,6 +35,7 @@ use App\Mail\OrderClientMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 
 class CheckoutController extends Controller
@@ -166,6 +168,7 @@ public function index()
     $scheduleV2Payload = $primaryLocation
         ? $this->scheduleV2->buildPayload($primaryLocation, now('Europe/Kyiv'), 14)
         : ['enabled' => false, 'timezone' => 'Europe/Kyiv', 'now' => now('Europe/Kyiv')->toIso8601String(), 'methods' => []];
+    $holidayPayload = $this->buildHolidayPayload(now('Europe/Kyiv'), 30);
 
 // локаль сайта
     $locale = app()->getLocale();
@@ -238,6 +241,7 @@ public function index()
         'sessionData' => $sessionData,
         'timeIntervals' => $timeIntervals,
         'scheduleV2' => $scheduleV2Payload,
+        'holidayPayload' => $holidayPayload,
         'paypartsBanks' => $paypartsBanks,
         'appliedCouponCode' => $appliedCouponCode,
         'appliedCouponDiscount' => $appliedCouponDiscount,
@@ -450,6 +454,151 @@ private function checkoutDeliveryMomentError(?string $deliveryDate, ?string $del
     return null;
 }
 
+private function checkoutHolidayError(string $deliveryMode, ?string $deliveryDate): ?string
+{
+    if (! $this->holidaysTableExists()) {
+        return null;
+    }
+
+    $date = $deliveryMode === 'fixed'
+        ? $this->parseCheckoutDeliveryDate($deliveryDate)
+        : now('Europe/Kyiv')->startOfDay();
+
+    if (! $date) {
+        return null;
+    }
+
+    $holiday = HolidayPeriod::query()->forDate($date)->first();
+
+    if (! $holiday) {
+        return null;
+    }
+
+    return trim(strip_tags($holiday->localizedComment()))
+        ?: st('checkout.holiday.default_message', 'Сьогодні ми не працюємо. Ви можете оформити передзамовлення на доступну дату.');
+}
+
+private function checkoutScheduleError(
+    string $shippingMethod,
+    string $deliveryMode,
+    ?string $deliveryDate,
+    ?string $deliveryTime
+): ?string {
+    $location = $this->primaryScheduleLocation();
+
+    if (! $location || ! $this->scheduleV2->isEnabled($location)) {
+        return null;
+    }
+
+    $method = $shippingMethod === 'pickup' ? 'pickup' : 'delivery';
+    $now = now('Europe/Kyiv');
+
+    if ($deliveryMode === 'asap') {
+        return $this->scheduleV2->isAsapAvailable($location, $method, $now)
+            ? null
+            : st('cart.delivery.mode.asap_unavailable', 'Недоступно у неробочий час');
+    }
+
+    $date = $this->parseCheckoutDeliveryDate($deliveryDate);
+
+    if (! $date) {
+        return null;
+    }
+
+    if (! $this->scheduleV2->isDateAvailable($location, $method, $date, $now)) {
+        return st('cart.delivery.date_unavailable', 'Обрана дата недоступна для замовлення');
+    }
+
+    $time = trim((string) $deliveryTime);
+
+    if ($time === '') {
+        return null;
+    }
+
+    $slots = $this->scheduleV2->buildSlotsForDate($location, $method, $date, $now);
+
+    return in_array($time, $slots, true)
+        ? null
+        : st('cart.delivery.time_unavailable', 'Обраний час недоступний для замовлення');
+}
+
+private function primaryScheduleLocation(): ?Location
+{
+    return Location::query()
+        ->where('is_active', 1)
+        ->orderByDesc('schedule_v2_enabled')
+        ->orderBy('sort')
+        ->first();
+}
+
+private function buildHolidayPayload(Carbon $now, int $days = 30): array
+{
+    if (! $this->holidaysTableExists()) {
+        return [
+            'closed_dates' => [],
+            'periods' => [],
+            'active_notice' => null,
+        ];
+    }
+
+    $from = $now->copy()->startOfDay();
+    $to = $from->copy()->addDays(max(0, $days - 1));
+    $locale = app()->getLocale();
+    $dates = [];
+    $periods = [];
+
+    HolidayPeriod::query()
+        ->intersecting($from, $to)
+        ->orderBy('date_from')
+        ->get()
+        ->each(function (HolidayPeriod $period) use (&$dates, &$periods, $from, $to, $locale): void {
+            $start = $period->date_from?->copy()->startOfDay();
+            $end = $period->date_to?->copy()->startOfDay();
+
+            if (! $start || ! $end) {
+                return;
+            }
+
+            $periods[] = [
+                'id' => $period->id,
+                'date_from' => $start->toDateString(),
+                'date_to' => $end->toDateString(),
+                'comment' => $period->localizedComment($locale),
+            ];
+
+            $current = $start->greaterThan($from) ? $start->copy() : $from->copy();
+            $last = $end->lessThan($to) ? $end->copy() : $to->copy();
+
+            while ($current->lte($last)) {
+                $dates[] = $current->toDateString();
+                $current->addDay();
+            }
+        });
+
+    $active = HolidayPeriod::query()
+        ->forDate($now)
+        ->orderBy('date_from')
+        ->first();
+
+    return [
+        'closed_dates' => array_values(array_unique($dates)),
+        'periods' => $periods,
+        'active_notice' => $active ? [
+            'id' => $active->id,
+            'date_from' => $active->date_from?->toDateString(),
+            'date_to' => $active->date_to?->toDateString(),
+            'comment' => $active->localizedComment($locale),
+        ] : null,
+    ];
+}
+
+private function holidaysTableExists(): bool
+{
+    static $exists = null;
+
+    return $exists ??= Schema::hasTable((new HolidayPeriod())->getTable());
+}
+
 /**
  * Сохранение данных формы в сессию
  */
@@ -587,6 +736,34 @@ public function saveFormData(Request $request)
                 'errors' => ['delivery_time' => [$deliveryTimeError]],
             ], 422);
         }
+    }
+
+    $holidayError = $this->checkoutHolidayError(
+        $deliveryModeForValidation,
+        $mergedData['delivery_date'] ?? null,
+    );
+
+    if ($holidayError) {
+        return response()->json([
+            'ok' => false,
+            'message' => $holidayError,
+            'errors' => ['delivery_date' => [$holidayError]],
+        ], 422);
+    }
+
+    $scheduleError = $this->checkoutScheduleError(
+        (string) ($mergedData['shipping_method'] ?? 'delivery'),
+        $deliveryModeForValidation,
+        $mergedData['delivery_date'] ?? null,
+        $mergedData['delivery_time'] ?? null,
+    );
+
+    if ($scheduleError) {
+        return response()->json([
+            'ok' => false,
+            'message' => $scheduleError,
+            'errors' => ['delivery_date' => [$scheduleError]],
+        ], 422);
     }
 
     session(['checkout.form_data' => $mergedData]);
@@ -1244,6 +1421,30 @@ public function submit(Request $request)
                 ->withErrors(['delivery_time' => $deliveryTimeError])
                 ->withInput();
         }
+    }
+
+    $holidayError = $this->checkoutHolidayError(
+        $deliveryMode,
+        $request->input('delivery_date'),
+    );
+
+    if ($holidayError) {
+        return back()
+            ->withErrors(['delivery_date' => $holidayError])
+            ->withInput();
+    }
+
+    $scheduleError = $this->checkoutScheduleError(
+        $shippingMethod,
+        $deliveryMode,
+        $request->input('delivery_date'),
+        $request->input('delivery_time'),
+    );
+
+    if ($scheduleError) {
+        return back()
+            ->withErrors(['delivery_date' => $scheduleError])
+            ->withInput();
     }
 
     // 2. Адрес: существующий или новый (только для доставки)

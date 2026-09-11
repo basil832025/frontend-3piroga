@@ -362,6 +362,7 @@ document.addEventListener('alpine:init', () => {
                 saveUrl: @json($saveFormUrl),
                 googleMapsKey: @json(config('services.google_maps.key')),
                 scheduleV2: @json($scheduleV2 ?? ['enabled' => false]),
+                holidays: @json($holidayPayload ?? ['closed_dates' => [], 'periods' => [], 'active_notice' => null]),
             };
         </script>
     @endpush
