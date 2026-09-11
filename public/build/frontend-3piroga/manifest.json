@@ -1,6 +1,6 @@
 {
   "packages/frontend-3piroga/resources/css/app.css": {
-    "file": "assets/app-qxM6KTkj.css",
+    "file": "assets/app-vTZwmXkW.css",
     "src": "packages/frontend-3piroga/resources/css/app.css",
     "isEntry": true
   },
@@ -13,13 +13,13 @@
     "src": "packages/frontend-3piroga/resources/fonts/intro/intro_regular.ttf"
   },
   "packages/frontend-3piroga/resources/js/alpine/checkout.js": {
-    "file": "assets/checkout-7cyijaIt.js",
+    "file": "assets/checkout-C5MEd3ND.js",
     "name": "checkout",
     "src": "packages/frontend-3piroga/resources/js/alpine/checkout.js",
     "isDynamicEntry": true
   },
   "packages/frontend-3piroga/resources/js/app.js": {
-    "file": "assets/app-CFFEioZH.js",
+    "file": "assets/app-3qkLzVLw.js",
     "name": "app",
     "src": "packages/frontend-3piroga/resources/js/app.js",
     "isEntry": true,
