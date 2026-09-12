@@ -9,10 +9,8 @@
         ? url('/' . $locale . '/pies')
         : url('/pies');
     $routeName = (string) request()->route()?->getName();
-    $path = trim((string) request()->path(), '/');
     $isCheckout = str_ends_with($routeName, 'checkout') || str_ends_with($routeName, 'checkout.submit');
-    $isHome = str_ends_with($routeName, 'home') || in_array($path, ['', 'ru', 'en'], true);
-    $showMode = ($isCheckout || $isHome) ? 'always' : 'google_once';
+    $showMode = $isCheckout ? 'always' : 'once';
 @endphp
 
 @if ($holidayNotice)
@@ -20,25 +18,14 @@
         x-data="{
             open: false,
             mode: @js($showMode),
-            storageKey: 'tpHolidayNoticeSeenFromGoogle:{{ data_get($holidayNotice, 'id', 'current') }}',
+            storageKey: 'tpHolidayNoticeSeen:{{ data_get($holidayNotice, 'id', 'current') }}',
             init() {
                 if (this.mode === 'always') {
                     this.open = true;
                     return;
                 }
 
-                const fromGoogle = (() => {
-                    try {
-                        const referrer = document.referrer || '';
-                        if (!referrer) return false;
-                        const host = new URL(referrer).hostname.toLowerCase();
-                        return host === 'google.com' || host.endsWith('.google.com') || host.includes('.google.');
-                    } catch (_) {
-                        return false;
-                    }
-                })();
-
-                if (fromGoogle && !sessionStorage.getItem(this.storageKey)) {
+                if (!sessionStorage.getItem(this.storageKey)) {
                     sessionStorage.setItem(this.storageKey, '1');
                     this.open = true;
                 }
