@@ -45,6 +45,9 @@ Route::get('/cart', [CartController::class, 'page'])
     ->defaults('guest_stateless', true)
     ->withoutMiddleware([VerifyCsrfToken::class]);
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+Route::get('/checkout/availability', [CheckoutController::class, 'availability'])
+    ->middleware(['auth', 'throttle:60,1'])
+    ->name('checkout.availability');
 Route::post('/checkout', [CheckoutController::class, 'submit'])->name('checkout.submit');
 Route::post('/checkout/save-form-data', [CheckoutController::class, 'saveFormData'])->name('checkout.save-form-data');
 Route::post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])->name('checkout.apply-coupon');

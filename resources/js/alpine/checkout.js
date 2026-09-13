@@ -193,6 +193,8 @@ function deliveryBlock() {
         holidays: null,
         availableDates: [],
         holidayClosedDates: [],
+        loadedScheduleMonths: [],
+        loadingScheduleMonths: [],
         asapEnabled: true,
 
         allTimeIntervals: [],
@@ -278,6 +280,14 @@ function deliveryBlock() {
 
                 onReady: (_, __, inst) => {
                     inst.altInput.placeholder = this.$refs.date.placeholder || 'Дата*';
+                },
+
+                onMonthChange: (_, __, inst) => {
+                    this.loadScheduleV2Month(inst.currentYear, inst.currentMonth);
+                },
+
+                onYearChange: (_, __, inst) => {
+                    this.loadScheduleV2Month(inst.currentYear, inst.currentMonth);
                 },
 
                 onChange: (sel) => {
@@ -378,6 +388,7 @@ function deliveryBlock() {
             });
 
             this.applyScheduleV2Availability();
+            this.loadScheduleV2Month(this.fpDate.currentYear, this.fpDate.currentMonth);
         },
 
         getCurrentShippingMethod() {
@@ -391,6 +402,49 @@ function deliveryBlock() {
         getScheduleV2MethodPayload() {
             if (!this.scheduleV2 || !this.scheduleV2.enabled) return null;
             return this.scheduleV2.methods?.[this.getCurrentShippingMethod()] || null;
+        },
+
+        async loadScheduleV2Month(year, zeroBasedMonth) {
+            const url = window.CHECKOUT_CONFIG?.availabilityUrl;
+            if (!this.scheduleV2?.enabled || !url) return;
+
+            const month = `${year}-${String(zeroBasedMonth + 1).padStart(2, '0')}`;
+            if (this.loadedScheduleMonths.includes(month) || this.loadingScheduleMonths.includes(month)) return;
+
+            this.loadingScheduleMonths.push(month);
+            try {
+                const response = await fetch(`${url}?month=${encodeURIComponent(month)}`, {
+                    headers: { Accept: 'application/json' },
+                });
+                if (!response.ok) throw new Error(`Schedule request failed: ${response.status}`);
+
+                const data = await response.json();
+                if (!data.enabled || !data.methods) return;
+
+                for (const method of ['pickup', 'delivery']) {
+                    const current = this.scheduleV2.methods?.[method];
+                    const incoming = data.methods[method];
+                    if (!current || !incoming) continue;
+
+                    current.available_dates = [...new Set([
+                        ...(current.available_dates || []), ...(incoming.available_dates || []),
+                    ])].sort();
+                    current.closed_dates = [...new Set([
+                        ...(current.closed_dates || []), ...(incoming.closed_dates || []),
+                    ])];
+                    current.slots_by_date = {
+                        ...(current.slots_by_date || {}), ...(incoming.slots_by_date || {}),
+                    };
+                }
+
+                this.loadedScheduleMonths.push(month);
+                this.applyScheduleV2Availability();
+                this.updateAvailableTimeIntervals();
+            } catch (error) {
+                if (CHECKOUT_DEBUG) console.warn('Could not load checkout schedule', error);
+            } finally {
+                this.loadingScheduleMonths = this.loadingScheduleMonths.filter(value => value !== month);
+            }
         },
 
         applyScheduleV2Availability() {
@@ -415,7 +469,9 @@ function deliveryBlock() {
             }
 
             if (this.fpDate) {
-                this.fpDate.set('disable', this.holidayClosedDates);
+                this.fpDate.set('disable', [
+                    ...new Set([...this.holidayClosedDates, ...(payload.closed_dates || [])]),
+                ]);
                 this.fpDate.set('enable', this.availableDates);
                 if (this.availableDates.length === 0) {
                     this.fpDate.clear();

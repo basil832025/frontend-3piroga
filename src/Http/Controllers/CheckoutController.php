@@ -165,8 +165,9 @@ public function index()
     $timeIntervals = $this->getDeliveryTimeIntervals($locations);
 
     $primaryLocation = $locations->firstWhere('schedule_v2_enabled', true) ?? $locations->first();
+    $now = now('Europe/Kyiv');
     $scheduleV2Payload = $primaryLocation
-        ? $this->scheduleV2->buildPayload($primaryLocation, now('Europe/Kyiv'), 14)
+        ? $this->scheduleV2->buildPayload($primaryLocation, $now, $now->daysInMonth - $now->day + 1)
         : ['enabled' => false, 'timezone' => 'Europe/Kyiv', 'now' => now('Europe/Kyiv')->toIso8601String(), 'methods' => []];
     $holidayPayload = $this->buildHolidayPayload(now('Europe/Kyiv'), 30);
 
@@ -241,6 +242,11 @@ public function index()
         'sessionData' => $sessionData,
         'timeIntervals' => $timeIntervals,
         'scheduleV2' => $scheduleV2Payload,
+        'availabilityUrl' => route(
+            in_array(app()->getLocale(), ['ru', 'en'], true) ? 'localized.checkout.availability' : 'checkout.availability',
+            in_array(app()->getLocale(), ['ru', 'en'], true) ? ['locale' => app()->getLocale()] : [],
+            false,
+        ),
         'holidayPayload' => $holidayPayload,
         'paypartsBanks' => $paypartsBanks,
         'appliedCouponCode' => $appliedCouponCode,
@@ -476,6 +482,27 @@ private function checkoutHolidayError(string $deliveryMode, ?string $deliveryDat
 
     return trim(strip_tags($holiday->localizedComment()))
         ?: st('checkout.holiday.default_message', 'Сьогодні ми не працюємо. Ви можете оформити передзамовлення на доступну дату.');
+}
+
+public function availability(Request $request)
+{
+    $validated = $request->validate(['month' => ['required', 'date_format:Y-m']]);
+    $from = Carbon::createFromFormat('!Y-m', $validated['month'], 'Europe/Kyiv')->startOfMonth();
+    $to = $from->copy()->endOfMonth();
+    $now = now('Europe/Kyiv');
+    $location = $this->primaryScheduleLocation();
+
+    if (! $location || ! $this->scheduleV2->isEnabled($location)) {
+        return response()->json(['enabled' => false, 'methods' => []]);
+    }
+
+    return response()->json([
+        'enabled' => true,
+        'methods' => [
+            'pickup' => $this->scheduleV2->buildMethodPayloadForRange($location, 'pickup', $from, $to, $now),
+            'delivery' => $this->scheduleV2->buildMethodPayloadForRange($location, 'delivery', $from, $to, $now),
+        ],
+    ]);
 }
 
 private function checkoutScheduleError(
