@@ -90,6 +90,18 @@
                     $address = data_get($headerLocation, 'address')
                             ?? data_get($headerLocation, 'address_text')
                             ?? '';
+
+                    $lat = data_get($headerLocation, 'lat');
+                    $lng = data_get($headerLocation, 'lng');
+                    $googleMapLink = (string) (data_get($headerLocation, 'google_map_link') ?? '');
+
+                    if (is_numeric($lat) && is_numeric($lng)) {
+                        $mapsHref = 'https://www.google.com/maps/dir/?api=1&destination=' . urlencode($lat . ',' . $lng);
+                    } elseif ($googleMapLink !== '') {
+                        $mapsHref = $googleMapLink;
+                    } else {
+                        $mapsHref = 'https://www.google.com/maps/search/?api=1&query=' . urlencode((string) $address);
+                    }
                 @endphp
 
                 <div class="mt-4 flex flex-col gap-6 text-[14px] font-bold">
@@ -124,7 +136,9 @@
 
                         @if($address)
                             <li class="text-[#929292] font-normal">
-                                {{ $address }}
+                                <a href="{{ $mapsHref }}" target="_blank" rel="noopener noreferrer" class="hover:text-black">
+                                    {{ $address }}
+                                </a>
                             </li>
                         @endif
                     </ul>
