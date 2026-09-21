@@ -126,7 +126,7 @@
                 bonusPercent: {{ $bonusPercent ?? 0 }},
                 minOrderSumForEarn: {{ $minOrderSumForEarn ?? 0 }},
                 defaultArticle: @js($defaultArticle),
-                fmt(v){ const n=Number(v||0); const parts=n.toFixed(2).split('.'); return { uah: parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,' '), kop: parts[1] }; },
+                fmt(v){ const n=Math.round(Number(v||0)); const parts=n.toFixed(2).split('.'); return { uah: parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,' '), kop: parts[1] }; },
                 price(){ const p=this.prices[this.selected]; return p?.price ?? {{ $defaultPrice }}; },
                 old(){ const p=this.prices[this.selected]; return (p?.old && p.old > (p?.price ?? 0)) ? p.old : null; },
                 selectedProductId(){
@@ -280,8 +280,6 @@
                             {{-- старая цена --}}
                             <div class="text-[#9E9E9E] line-through" x-show="$store.sku.old()" x-cloak>
                                 <span class="text-[22px] leading-[22px]" x-text="$store.sku.fmt($store.sku.old()).uah"></span>
-                                <span class="relative -top-1 text-[12px] leading-[12px] ml-1"
-                                      x-text="$store.sku.fmt($store.sku.old()).kop"></span>
                                 <span class="text-[14px] leading-[14px] ml-1">грн</span>
                             </div>
 
@@ -291,8 +289,6 @@
                                 :class="$store.sku.old() ? 'text-[#DC2626]' : 'text-[#FF7500]'"
                             >
                                 <span class="text-[28px] leading-[32px]" x-text="$store.sku.fmt($store.sku.price()).uah"></span>
-                                <span class="relative -top-2 text-[14px] leading-[14px] ml-1"
-                                      x-text="$store.sku.fmt($store.sku.price()).kop"></span>
                                 <span class="text-sm font-medium ml-1">грн</span>
                             </div>
                         </div>
@@ -522,7 +518,7 @@
                             open: false,
                             popup: { top: 16, left: 16 },
                             payment() { return Number($store.sku?.price?.() || 0) / 3 },
-                            format(value) { return Number(value || 0).toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
+                            format(value) { return Math.round(Number(value || 0)).toLocaleString('uk-UA') },
                             openInfo(event) {
                                 const trigger = event.currentTarget.getBoundingClientRect();
                                 const width = Math.min(320, window.innerWidth - 32);

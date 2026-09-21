@@ -209,7 +209,7 @@
                     x-data="{
                         total: @js((float) ($total ?? 0)),
                         payment() { return this.total / 3 },
-                        format(value) { return Number(value || 0).toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
+                        format(value) { return Math.round(Number(value || 0)).toLocaleString('uk-UA') },
                     }"
                     x-init="window.addEventListener('cart-updated', (event) => { const data = event.detail || {}; if ('total_price' in data || 'total' in data) total = Number(data.total_price ?? data.total ?? 0); })"
                     class="mx-4 mb-4 rounded-xl bg-[#EFFAF1] p-4 text-[#175C2A] md:mx-6"

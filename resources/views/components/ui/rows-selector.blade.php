@@ -78,7 +78,7 @@
         metas: @js($metaMap),
 
         fmt(v){
-            const n = Number(v||0);
+            const n = Math.round(Number(v||0));
             const parts = n.toFixed(2).split('.');
             return { uah: parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,' '), kop: parts[1] };
         },
@@ -346,7 +346,6 @@
                 <div class="flex items-baseline gap-1 text-neutral-400 line-through whitespace-nowrap"
                      x-show="prices[selected]?.old && prices[selected]?.old > prices[selected]?.price">
                     <span class="font-semibold text-[16px] leading-[16px]" x-text="fmt(prices[selected]?.old).uah">{{ $op['uah'] ?? '' }}</span>
-                    <span class="relative -top-2 font-bold text-[11px] leading-[11px]" x-text="fmt(prices[selected]?.old).kop">{{ $op['kop'] ?? '' }}</span>
                     <span class="text-[12px] leading-[12px]">{{ $rowsSelectorLabels['currency'] }}</span>
                 </div>
 
@@ -355,7 +354,6 @@
                     :class="prices[selected]?.old && prices[selected]?.old > prices[selected]?.price ? 'text-[#DC2626]' : 'text-[#333333]'"
                 >
                     <span class="font-bold text-[26px] leading-[32px]" x-text="fmt(prices[selected]?.price).uah">{{ $p['uah'] }}</span>
-                    <span class="relative -top-3 font-bold text-[12px] leading-[12px]" x-text="fmt(prices[selected]?.price).kop">{{ $p['kop'] }}</span>
                     <span class="text-[14px] leading-[14px]">{{ $rowsSelectorLabels['currency'] }}</span>
                 </div>
             </div>
