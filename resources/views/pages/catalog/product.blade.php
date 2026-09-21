@@ -559,7 +559,7 @@
                         }"
                         class="mt-4"
                     >
-                        <button type="button" class="flex w-full items-center gap-2 rounded-lg bg-[#FFF1EB] px-3 py-2 text-left text-sm text-[#7A3418] transition hover:bg-[#FFE4D9]" @click="openInfo($event)" :aria-expanded="open" aria-haspopup="dialog">
+                        <button type="button" class="hidden flex w-full items-center gap-2 rounded-lg bg-[#FFF1EB] px-3 py-2 text-left text-sm text-[#7A3418] transition hover:bg-[#FFE4D9]" @click="openInfo($event)" :aria-expanded="open" aria-haspopup="dialog">
                             <svg class="h-5 w-5 shrink-0 text-[#FF7500]" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10H21M7 15H10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                             <span>{{ st('product.installment.prefix', 'Від') }}</span>
                             <strong><span x-text="format(payment())"></span> {{ st('cart.summary.currency_short', 'грн') }} × 3 {{ st('product.installment.dialog_payments', 'платежі') }}</strong>

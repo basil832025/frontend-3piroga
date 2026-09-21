@@ -461,7 +461,7 @@
 
         <button
             type="button"
-            class="mt-2 flex w-full items-center gap-2 rounded-lg bg-[#FFF1EB] px-3 py-2 text-left text-[12px] leading-4 text-[#7A3418] transition hover:bg-[#FFE4D9] focus:outline-none focus:ring-2 focus:ring-[#FF7500]/40"
+            class="hidden mt-2 flex w-full items-center gap-2 rounded-lg bg-[#FFF1EB] px-3 py-2 text-left text-[12px] leading-4 text-[#7A3418] transition hover:bg-[#FFE4D9] focus:outline-none focus:ring-2 focus:ring-[#FF7500]/40"
             @click="openInstallmentInfo($event)"
             aria-haspopup="dialog"
             :aria-expanded="showInstallmentInfo"
