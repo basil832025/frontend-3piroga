@@ -26,7 +26,7 @@
     $intro = page_field(
         $pageSlug,
         'pb_intro',
-        '<p>Оформлюйте замовлення від <strong>2000 грн</strong> та сплачуйте зручно частинами.</p>'
+        '<p>Оформлюйте замовлення на будь-яку суму та сплачуйте зручно частинами.</p>'
     );
 
     $heroImage = trim(
@@ -43,17 +43,17 @@
 
     $quickItems = match (app()->getLocale()) {
         'ru' => [
-            ['value' => 'от 2000 грн', 'text' => 'минимальная сумма'],
+            ['value' => 'без минимальной суммы', 'text' => 'ограничение'],
             ['value' => 'до 3 платежей', 'text' => 'удобная оплата'],
             ['value' => 'Приват24', 'text' => 'подтверждение онлайн'],
         ],
         'en' => [
-            ['value' => 'from UAH 2,000', 'text' => 'minimum order'],
+            ['value' => 'no minimum amount', 'text' => 'order limit'],
             ['value' => 'up to 3 payments', 'text' => 'convenient payment'],
             ['value' => 'Privat24', 'text' => 'online confirmation'],
         ],
         default => [
-            ['value' => 'від 2000 грн', 'text' => 'мінімальна сума'],
+            ['value' => 'без мінімальної суми', 'text' => 'обмеження'],
             ['value' => 'до 3 платежів', 'text' => 'зручна оплата'],
             ['value' => 'Приват24', 'text' => 'підтвердження онлайн'],
         ],

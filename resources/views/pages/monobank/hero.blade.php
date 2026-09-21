@@ -122,7 +122,7 @@
                                 </div>
 
                                 <div class="mt-2 text-4xl font-black text-white">
-                                    від 2000 грн
+                                    без мінімальної суми
                                 </div>
                             </div>
 

@@ -9,7 +9,7 @@
         'ru' => [
             [
                 'question' => 'От какой суммы доступна оплата частями?',
-                'answer' => 'Сервис доступен для заказов на сумму от 2000 грн.',
+                'answer' => 'Сервис доступен для заказов на любую сумму.',
             ],
             [
                 'question' => 'На сколько платежей можно разделить оплату?',
@@ -28,7 +28,7 @@
         'en' => [
             [
                 'question' => 'What is the minimum order amount?',
-                'answer' => 'Installment payment is available for orders starting from UAH 2,000.',
+                'answer' => 'Installment payment is available for orders of any amount.',
             ],
             [
                 'question' => 'How many payments can the order be divided into?',
@@ -47,7 +47,7 @@
         default => [
             [
                 'question' => 'Від якої суми доступна оплата частинами?',
-                'answer' => 'Сервіс доступний для замовлень на суму від 2000 грн.',
+                'answer' => 'Сервіс доступний для замовлень на будь-яку суму.',
             ],
             [
                 'question' => 'На скільки платежів можна розділити оплату?',

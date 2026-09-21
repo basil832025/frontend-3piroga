@@ -286,7 +286,10 @@
                             </div>
 
                             {{-- текущая цена --}}
-                            <div class="text-[#FF7500] font-semibold">
+                            <div
+                                class="font-semibold"
+                                :class="$store.sku.old() ? 'text-[#DC2626]' : 'text-[#FF7500]'"
+                            >
                                 <span class="text-[28px] leading-[32px]" x-text="$store.sku.fmt($store.sku.price()).uah"></span>
                                 <span class="relative -top-2 text-[14px] leading-[14px] ml-1"
                                       x-text="$store.sku.fmt($store.sku.price()).kop"></span>
@@ -513,6 +516,49 @@
                             :init-store="false"
                         />
                     @endif
+
+                    <div
+                        x-data="{
+                            open: false,
+                            popup: { top: 16, left: 16 },
+                            payment() { return Number($store.sku?.price?.() || 0) / 3 },
+                            format(value) { return Number(value || 0).toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
+                            openInfo(event) {
+                                const trigger = event.currentTarget.getBoundingClientRect();
+                                const width = Math.min(320, window.innerWidth - 32);
+                                const height = 285;
+                                const left = Math.max(16, Math.min(trigger.right - width, window.innerWidth - width - 16));
+                                const top = trigger.bottom + 8 + height <= window.innerHeight ? trigger.bottom + 8 : Math.max(16, trigger.top - height - 8);
+                                this.popup = { top, left };
+                                this.open = true;
+                            },
+                        }"
+                        class="mt-4"
+                    >
+                        <button type="button" class="flex w-full items-center gap-2 rounded-lg bg-[#FFF1EB] px-3 py-2 text-left text-sm text-[#7A3418] transition hover:bg-[#FFE4D9]" @click="openInfo($event)" :aria-expanded="open" aria-haspopup="dialog">
+                            <svg class="h-5 w-5 shrink-0 text-[#FF7500]" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10H21M7 15H10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                            <span>{{ st('product.installment.prefix', 'Від') }}</span>
+                            <strong><span x-text="format(payment())"></span> {{ st('cart.summary.currency_short', 'грн') }} × 3 {{ st('product.installment.dialog_payments', 'платежі') }}</strong>
+                            <svg class="ml-auto h-4 w-4 shrink-0 text-[#FF7500]" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+
+                        <div class="mt-2 flex items-center justify-center gap-5 text-xs leading-3 text-[#777]">
+                            <div class="flex items-center gap-2"><span class="flex h-8 w-8 items-center justify-center rounded-full bg-[#242938] text-xs font-semibold text-white">M</span><span><strong class="block text-[#242938]">monobank</strong>{{ st('product.installment.monobank', 'Покупка частинами') }}</span></div>
+                            <div class="flex items-center gap-2"><svg class="h-8 w-8" viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M32.7059 32H20.6827C20.6827 31.029 20.6922 30.0756 20.6803 29.1211C20.6637 27.7979 20.4866 26.4969 20.0541 25.2395C19.075 22.3911 17.0156 20.7497 14.1114 20.0511C12.5999 19.6871 11.0611 19.6636 9.51867 19.6707C9.0279 19.673 8.53713 19.6707 8.03448 19.6707V8H32.7059V32ZM27.5986 27.0406V12.9771H13.1525V14.8521C20.3809 15.8595 24.6136 19.8421 25.6557 27.0417H27.5998L27.5986 27.0406Z" fill="#76AE42"/><path d="M8 31.9905V22.6246H17.649V31.9905H8Z" fill="black"/></svg><span><strong class="block text-[#242938]">ПриватБанк</strong>{{ st('product.installment.privatbank', 'Оплата частинами') }}</span></div>
+                        </div>
+
+                        <div x-show="open" x-cloak x-transition.opacity @keydown.escape.window="open = false" class="fixed inset-0" style="position: fixed; inset: 0; z-index: 100;" role="dialog" aria-modal="true" aria-label="{{ st('product.installment.dialog_title', 'Купити частинами') }}" @click.self="open = false">
+                            <div x-transition.scale.origin.center class="relative rounded-2xl bg-white p-5 shadow-2xl" :style="`position: fixed; width: min(320px, calc(100vw - 32px)); max-width: calc(100vw - 32px); top: ${popup.top}px; left: ${popup.left}px;`">
+                                <button type="button" class="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-lg text-[#777] hover:bg-gray-100" @click="open = false" aria-label="{{ st('all.close', 'Закрити') }}">×</button>
+                                <h3 class="pr-7 text-[18px] font-bold text-[#242938]">{{ st('product.installment.dialog_title', 'Купити частинами') }}</h3>
+                                <div class="mt-4 space-y-3">
+                                    <div class="flex items-center gap-3 rounded-xl bg-[#F7F7F7] p-3"><span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#242938] text-sm font-semibold text-white">M</span><div><strong class="block text-sm text-[#242938]">monobank</strong><span class="text-xs text-[#666]"><span x-text="format(payment())"></span> {{ st('cart.summary.currency_short', 'грн') }} × 3</span><span class="block text-xs text-[#777]">{{ st('product.installment.monobank', 'Покупка частинами') }}</span></div></div>
+                                    <div class="flex items-center gap-3 rounded-xl bg-[#F7F7F7] p-3"><svg class="h-10 w-10 shrink-0" viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M32.7059 32H20.6827C20.6827 31.029 20.6922 30.0756 20.6803 29.1211C20.6637 27.7979 20.4866 26.4969 20.0541 25.2395C19.075 22.3911 17.0156 20.7497 14.1114 20.0511C12.5999 19.6871 11.0611 19.6636 9.51867 19.6707C9.0279 19.673 8.53713 19.6707 8.03448 19.6707V8H32.7059V32ZM27.5986 27.0406V12.9771H13.1525V14.8521C20.3809 15.8595 24.6136 19.8421 25.6557 27.0417H27.5998L27.5986 27.0406Z" fill="#76AE42"/><path d="M8 31.9905V22.6246H17.649V31.9905H8Z" fill="black"/></svg><div><strong class="block text-sm text-[#242938]">ПриватБанк</strong><span class="text-xs text-[#666]"><span x-text="format(payment())"></span> {{ st('cart.summary.currency_short', 'грн') }} × 3</span><span class="block text-xs text-[#777]">{{ st('product.installment.privatbank', 'Оплата частинами') }}</span></div></div>
+                                </div>
+                                <p class="mt-4 text-center text-xs leading-4 text-[#777]">{{ st('product.installment.dialog_hint', 'Оформити оплату частинами можна під час оформлення замовлення.') }}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 

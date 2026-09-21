@@ -213,6 +213,46 @@
         </div>
     </div>
 
+    <div
+        x-data="{
+            total: @js((float) ($total ?? 0)),
+            payment() { return this.total / 3 },
+            format(value) { return Number(value || 0).toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
+        }"
+        x-init="window.addEventListener('cart-updated', (event) => { const data = event.detail || {}; if ('total_price' in data || 'total' in data) total = Number(data.total_price ?? data.total ?? 0); })"
+        class="mx-4 mb-4 rounded-xl bg-[#EFFAF1] p-3 text-[#175C2A]"
+    >
+        <div class="flex items-start gap-2">
+            <svg class="mt-0.5 h-7 w-7 shrink-0 text-[#3D9B58]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                <path d="M3 10H21M7 15H10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <div>
+                <div class="font-bold leading-5">{{ st('cart.installment.title', 'Можна оплатити частинами!') }}</div>
+                <div class="text-xs leading-4 text-[#4E6D56]">{{ st('cart.installment.plan', '3 місяці — по') }} <strong><span x-text="format(payment())"></span> {{ st('cart.summary.currency_short', 'грн') }}</strong></div>
+            </div>
+        </div>
+
+        <div class="mt-3 grid grid-cols-2 gap-2">
+            <div class="flex min-w-0 items-center gap-2 rounded-lg bg-white p-2">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#242938] text-xs font-semibold text-white">M</span>
+                <div class="min-w-0 text-[10px] leading-3 text-[#4B5563]">
+                    <strong class="block truncate text-[12px] text-[#242938]">monobank</strong>
+                    <span class="block">{{ st('product.installment.monobank', 'Покупка частинами') }}</span>
+                    <span class="block">{{ st('product.installment.prefix', 'Від') }} <strong><span x-text="format(payment())"></span> {{ st('cart.summary.currency_short', 'грн') }} × 3</strong></span>
+                </div>
+            </div>
+            <div class="flex min-w-0 items-center gap-2 rounded-lg bg-white p-2">
+                <svg class="h-9 w-9 shrink-0" viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M32.7059 32H20.6827C20.6827 31.029 20.6922 30.0756 20.6803 29.1211C20.6637 27.7979 20.4866 26.4969 20.0541 25.2395C19.075 22.3911 17.0156 20.7497 14.1114 20.0511C12.5999 19.6871 11.0611 19.6636 9.51867 19.6707C9.0279 19.673 8.53713 19.6707 8.03448 19.6707V8H32.7059V32ZM27.5986 27.0406V12.9771H13.1525V14.8521C20.3809 15.8595 24.6136 19.8421 25.6557 27.0417H27.5998L27.5986 27.0406Z" fill="#76AE42"/><path d="M8 31.9905V22.6246H17.649V31.9905H8Z" fill="black"/></svg>
+                <div class="min-w-0 text-[10px] leading-3 text-[#4B5563]">
+                    <strong class="block truncate text-[12px] text-[#242938]">ПриватБанк</strong>
+                    <span class="block">{{ st('product.installment.privatbank', 'Оплата частинами') }}</span>
+                    <span class="block">{{ st('product.installment.prefix', 'Від') }} <strong><span x-text="format(payment())"></span> {{ st('cart.summary.currency_short', 'грн') }} × 3</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="p-4 border-t flex items-center justify-between text-[#19191A] text-2xl font-bold">
         <div>{{ st('cart.summary.total_to_pay', 'До сплати') }}</div>
         <div data-cart-total>

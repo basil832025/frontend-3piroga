@@ -12,7 +12,7 @@
         'mono_conditions_content',
         '
         <ul>
-            <li>Мінімальна сума замовлення — <strong>2000 грн</strong>.</li>
+            <li>Мінімальна сума замовлення не встановлена.</li>
             <li>Кількість платежів — <strong>3</strong>.</li>
             <li>Необхідна картка monobank та доступний ліміт сервісу.</li>
             <li>Підтвердження здійснюється у застосунку monobank.</li>
@@ -88,7 +88,7 @@
                             </div>
 
                             <div class="whitespace-nowrap text-xl font-black text-black">
-                                2000 грн
+                                Без обмежень
                             </div>
                         </div>
 
