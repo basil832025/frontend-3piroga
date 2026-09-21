@@ -46,6 +46,24 @@
         $price           = $product['price'];
         $price_no_sale   = $product['old_price'];
 
+        $paypartsBankTerms = collect();
+        try {
+            $paypartsBankTerms = \App\Models\Shop\PaypartsBank::query()
+                ->active()
+                ->visibleForClient(auth()->user())
+                ->orderBy('id')
+                ->get()
+                ->mapWithKeys(function (\App\Models\Shop\PaypartsBank $bank): array {
+                    $type = (string) ($bank->bank_type ?? '');
+                    return [$type => [
+                        'name' => $bank->localizedText('name', app()->getLocale(), $bank->bankType()?->label() ?? $type),
+                        'terms' => (string) ($bank->localizedText('terms', app()->getLocale()) ?? ''),
+                    ]];
+                });
+        } catch (\Throwable $e) {
+            // Product details should still render if payparts settings are unavailable.
+        }
+
         // подготовка стора
         $rootId  = $rootId ?? ($rows[0]['product_id'] ?? null);
         $rootKey = (string) ($rows[0]['variant_key'] ?? $rootId ?? '');
@@ -516,9 +534,19 @@
                     <div
                         x-data="{
                             open: false,
+                            showBankTerms: false,
+                            bankTerms: { name: '', html: '' },
                             popup: { top: 16, left: 16 },
                             payment() { return Number($store.sku?.price?.() || 0) / 3 },
                             format(value) { return Math.round(Number(value || 0)).toLocaleString('uk-UA') },
+                            openBankTerms(bankType) {
+                                const bank = @js($paypartsBankTerms->all());
+                                const fallback = bankType === 'monobank' ? { name: 'monobank', html: '' } : { name: 'ПриватБанк', html: '' };
+                                this.bankTerms = bank[bankType] && bank[bankType].terms
+                                    ? { name: bank[bankType].name || fallback.name, html: bank[bankType].terms }
+                                    : fallback;
+                                this.showBankTerms = true;
+                            },
                             openInfo(event) {
                                 const trigger = event.currentTarget.getBoundingClientRect();
                                 const width = Math.min(320, window.innerWidth - 32);
@@ -539,14 +567,14 @@
                         </button>
 
                         <div class="mt-2 grid grid-cols-2 gap-2 text-xs leading-3 text-[#777]">
-                            <div class="flex min-w-0 items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white px-3 py-2">
+                            <button type="button" class="flex min-w-0 cursor-pointer items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white px-3 py-2 text-left transition hover:border-[#FF7500] hover:bg-[#FFF8F3] focus:outline-none focus:ring-2 focus:ring-[#FF7500]/40" @click="openBankTerms('monobank')" aria-haspopup="dialog">
                                 <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#242938] text-xs font-semibold text-white">M</span>
                                 <span class="min-w-0"><strong class="block truncate text-[#242938]">monobank</strong><span class="block truncate">{{ st('product.installment.monobank', 'Покупка частинами') }}</span><span class="block whitespace-nowrap">{{ st('product.installment.prefix', 'Від') }} <strong><span x-text="format(payment())"></span> {{ st('cart.summary.currency_short', 'грн') }}/{{ st('product.installment.per_month_short', 'міс.') }}</strong></span></span>
-                            </div>
-                            <div class="flex min-w-0 items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white px-3 py-2">
+                            </button>
+                            <button type="button" class="flex min-w-0 cursor-pointer items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white px-3 py-2 text-left transition hover:border-[#FF7500] hover:bg-[#FFF8F3] focus:outline-none focus:ring-2 focus:ring-[#FF7500]/40" @click="openBankTerms('privatbank')" aria-haspopup="dialog">
                                 <svg class="h-8 w-8 shrink-0" viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M32.7059 32H20.6827C20.6827 31.029 20.6922 30.0756 20.6803 29.1211C20.6637 27.7979 20.4866 26.4969 20.0541 25.2395C19.075 22.3911 17.0156 20.7497 14.1114 20.0511C12.5999 19.6871 11.0611 19.6636 9.51867 19.6707C9.0279 19.673 8.53713 19.6707 8.03448 19.6707V8H32.7059V32ZM27.5986 27.0406V12.9771H13.1525V14.8521C20.3809 15.8595 24.6136 19.8421 25.6557 27.0417H27.5998L27.5986 27.0406Z" fill="#76AE42"/><path d="M8 31.9905V22.6246H17.649V31.9905H8Z" fill="black"/></svg>
                                 <span class="min-w-0"><strong class="block truncate text-[#242938]">ПриватБанк</strong><span class="block truncate">{{ st('product.installment.privatbank', 'Оплата частинами') }}</span><span class="block whitespace-nowrap">{{ st('product.installment.prefix', 'Від') }} <strong><span x-text="format(payment())"></span> {{ st('cart.summary.currency_short', 'грн') }}/{{ st('product.installment.per_month_short', 'міс.') }}</strong></span></span>
-                            </div>
+                            </button>
                         </div>
 
                         <div x-show="open" x-cloak x-transition.opacity @keydown.escape.window="open = false" class="fixed inset-0" style="position: fixed; inset: 0; z-index: 100;" role="dialog" aria-modal="true" aria-label="{{ st('product.installment.dialog_title', 'Купити частинами') }}" @click.self="open = false">
@@ -558,6 +586,14 @@
                                     <div class="flex items-center gap-3 rounded-xl bg-[#F7F7F7] p-3"><svg class="h-10 w-10 shrink-0" viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M32.7059 32H20.6827C20.6827 31.029 20.6922 30.0756 20.6803 29.1211C20.6637 27.7979 20.4866 26.4969 20.0541 25.2395C19.075 22.3911 17.0156 20.7497 14.1114 20.0511C12.5999 19.6871 11.0611 19.6636 9.51867 19.6707C9.0279 19.673 8.53713 19.6707 8.03448 19.6707V8H32.7059V32ZM27.5986 27.0406V12.9771H13.1525V14.8521C20.3809 15.8595 24.6136 19.8421 25.6557 27.0417H27.5998L27.5986 27.0406Z" fill="#76AE42"/><path d="M8 31.9905V22.6246H17.649V31.9905H8Z" fill="black"/></svg><div><strong class="block text-sm text-[#242938]">ПриватБанк</strong><span class="text-xs text-[#666]"><span x-text="format(payment())"></span> {{ st('cart.summary.currency_short', 'грн') }} × 3</span><span class="block text-xs text-[#777]">{{ st('product.installment.privatbank', 'Оплата частинами') }}</span></div></div>
                                 </div>
                                 <p class="mt-4 text-center text-xs leading-4 text-[#777]">{{ st('product.installment.dialog_hint', 'Оформити оплату частинами можна під час оформлення замовлення.') }}</p>
+                            </div>
+                        </div>
+
+                        <div x-show="showBankTerms" x-cloak x-transition.opacity @keydown.escape.window="showBankTerms = false" class="fixed inset-0" style="position: fixed; inset: 0; z-index: 110; background: rgba(0,0,0,.5);" role="dialog" aria-modal="true" :aria-label="bankTerms.name" @click.self="showBankTerms = false">
+                            <div x-transition.scale.origin.center class="relative rounded-2xl bg-white p-5 shadow-2xl" style="position: fixed; width: min(560px, calc(100vw - 32px)); max-width: calc(100vw - 32px); max-height: calc(100vh - 32px); overflow-y: auto; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                <button type="button" class="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full text-xl text-[#777] hover:bg-gray-100" @click="showBankTerms = false" aria-label="{{ st('all.close', 'Закрити') }}">×</button>
+                                <h3 class="pr-9 text-[20px] font-bold text-[#242938]" x-text="bankTerms.name"></h3>
+                                <div class="mt-4 text-sm leading-6 text-[#4B5563]" x-html="bankTerms.html || @js(st('product.installment.dialog_hint', 'Оформити оплату частинами можна під час оформлення замовлення.'))"></div>
                             </div>
                         </div>
                     </div>

@@ -27,6 +27,16 @@
 
     $addUrl    = Route::has('cart.add')    ? route('cart.add')    : url('/cart/add');
     $removeUrl = Route::has('cart.remove') ? route('cart.remove') : url('/cart/remove');
+
+    $paypartsBankTerms = collect();
+    try {
+        $paypartsBankTerms = \App\Models\Shop\PaypartsBank::query()->active()->visibleForClient(auth()->user())->orderBy('id')->get()->mapWithKeys(function (\App\Models\Shop\PaypartsBank $bank): array {
+            $type = (string) ($bank->bank_type ?? '');
+            return [$type => ['name' => $bank->localizedText('name', app()->getLocale(), $bank->bankType()?->label() ?? $type), 'terms' => (string) ($bank->localizedText('terms', app()->getLocale()) ?? '')]];
+        });
+    } catch (\Throwable $e) {
+        // Keep the cart available if payparts settings are unavailable.
+    }
 @endphp
 
 @section('content')
@@ -208,8 +218,16 @@
                 <div
                     x-data="{
                         total: @js((float) ($total ?? 0)),
+                        showBankTerms: false,
+                        bankTerms: { name: '', html: '' },
                         payment() { return this.total / 3 },
                         format(value) { return Math.round(Number(value || 0)).toLocaleString('uk-UA') },
+                        openBankTerms(type) {
+                            const bank = @js($paypartsBankTerms->all());
+                            const fallback = type === 'monobank' ? { name: 'monobank', html: '' } : { name: 'ПриватБанк', html: '' };
+                            this.bankTerms = bank[type] && bank[type].terms ? { name: bank[type].name || fallback.name, html: bank[type].terms } : fallback;
+                            this.showBankTerms = true;
+                        },
                     }"
                     x-init="window.addEventListener('cart-updated', (event) => { const data = event.detail || {}; if ('total_price' in data || 'total' in data) total = Number(data.total_price ?? data.total ?? 0); })"
                     class="mx-4 mb-4 rounded-xl bg-[#EFFAF1] p-4 text-[#175C2A] md:mx-6"
@@ -226,21 +244,29 @@
                     </div>
 
                     <div class="mt-3 grid grid-cols-2 gap-2">
-                        <div class="flex min-w-0 items-center gap-3 rounded-lg bg-white p-3">
+                        <button type="button" class="flex min-w-0 cursor-pointer items-center gap-3 rounded-lg bg-white p-3 text-left transition hover:ring-2 hover:ring-[#FF7500]/40 focus:outline-none focus:ring-2 focus:ring-[#FF7500]/40" @click="openBankTerms('monobank')" aria-haspopup="dialog">
                             <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#242938] text-sm font-semibold text-white">M</span>
                             <div class="min-w-0 text-[10px] leading-3 text-[#4B5563]">
                                 <strong class="block truncate text-[12px] text-[#242938]">monobank</strong>
                                 <span class="block">{{ st('product.installment.monobank', 'Покупка частинами') }}</span>
                                 <span class="block">{{ st('product.installment.prefix', 'Від') }} <strong><span x-text="format(payment())"></span> {{ st('cart.summary.currency_short', 'грн') }} × 3</strong></span>
                             </div>
-                        </div>
-                        <div class="flex min-w-0 items-center gap-3 rounded-lg bg-white p-3">
+                        </button>
+                        <button type="button" class="flex min-w-0 cursor-pointer items-center gap-3 rounded-lg bg-white p-3 text-left transition hover:ring-2 hover:ring-[#FF7500]/40 focus:outline-none focus:ring-2 focus:ring-[#FF7500]/40" @click="openBankTerms('privatbank')" aria-haspopup="dialog">
                             <svg class="h-10 w-10 shrink-0" viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M32.7059 32H20.6827C20.6827 31.029 20.6922 30.0756 20.6803 29.1211C20.6637 27.7979 20.4866 26.4969 20.0541 25.2395C19.075 22.3911 17.0156 20.7497 14.1114 20.0511C12.5999 19.6871 11.0611 19.6636 9.51867 19.6707C9.0279 19.673 8.53713 19.6707 8.03448 19.6707V8H32.7059V32ZM27.5986 27.0406V12.9771H13.1525V14.8521C20.3809 15.8595 24.6136 19.8421 25.6557 27.0417H27.5998L27.5986 27.0406Z" fill="#76AE42"/><path d="M8 31.9905V22.6246H17.649V31.9905H8Z" fill="black"/></svg>
                             <div class="min-w-0 text-[10px] leading-3 text-[#4B5563]">
                                 <strong class="block truncate text-[12px] text-[#242938]">ПриватБанк</strong>
                                 <span class="block">{{ st('product.installment.privatbank', 'Оплата частинами') }}</span>
                                 <span class="block">{{ st('product.installment.prefix', 'Від') }} <strong><span x-text="format(payment())"></span> {{ st('cart.summary.currency_short', 'грн') }} × 3</strong></span>
                             </div>
+                        </button>
+                    </div>
+
+                    <div x-show="showBankTerms" x-cloak x-transition.opacity @keydown.escape.window="showBankTerms = false" class="fixed inset-0" style="position:fixed;inset:0;z-index:110;background:rgba(0,0,0,.5)" role="dialog" aria-modal="true" :aria-label="bankTerms.name" @click.self="showBankTerms = false">
+                        <div class="relative rounded-2xl bg-white p-5 shadow-2xl" style="position:fixed;width:min(560px,calc(100vw - 32px));max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);overflow-y:auto;top:50%;left:50%;transform:translate(-50%,-50%)">
+                            <button type="button" class="absolute right-3 top-3 h-8 w-8 rounded-full text-xl text-[#777] hover:bg-gray-100" @click="showBankTerms = false" aria-label="{{ st('all.close', 'Закрити') }}">×</button>
+                            <h3 class="pr-9 text-xl font-bold text-[#242938]" x-text="bankTerms.name"></h3>
+                            <div class="mt-4 text-sm leading-6 text-[#4B5563]" x-html="bankTerms.html || @js(st('product.installment.dialog_hint', 'Оформити оплату частинами можна під час оформлення замовлення.'))"></div>
                         </div>
                     </div>
                 </div>
