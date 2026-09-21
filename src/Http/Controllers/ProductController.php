@@ -44,10 +44,11 @@ class ProductController extends Controller
                      SUM(rating=2) as r2,
                      SUM(rating=1) as r1')
             ->first();
-        // выведим хиты для рекомендаций
+        // Recommendations are selected explicitly in the catalog manager.
         $q = Product::withListingCardRelations()
             // ->addSelect('category_id')
-            ->active()->cardListingSelect()->MainProduct()->hit()
+            ->active()->cardListingSelect()->MainProduct()->recommended()
+           ->where('bs_products.id', '!=', $product->id)
            ->orderBy('sort');
         $related = (new ProductCardPresenter($locale, null, true))->collection($q->get());
         $product = (new ProductCardPresenter($locale))->for($product);

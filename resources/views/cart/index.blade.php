@@ -315,7 +315,7 @@
         @endif
 
         <x-pages.catalog.partials.recommendations
-            :title="st('cart.forgot_anything', 'Нічого не забули')"
+            :title="st('cart.forgot_anything', 'Нічого не забули?')"
             :products="$related ?? []"
         />
     </div>
