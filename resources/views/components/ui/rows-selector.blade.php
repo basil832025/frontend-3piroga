@@ -18,6 +18,7 @@
         'installment_term' => st('product.installment.term', 'грн × 3 платежі'),
         'mono_label' => st('product.installment.monobank', 'Покупка частинами'),
         'privat_label' => st('product.installment.privatbank', 'Оплата частинами'),
+        'per_month_short' => st('product.installment.per_month_short', 'міс.'),
         ];
     }
 
@@ -438,17 +439,17 @@
             <svg class="ml-auto h-4 w-4 shrink-0 text-[#FF7500]" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
 
-        <div class="mt-2 flex items-center justify-center gap-4 text-[10px] leading-3 text-[#777]">
-            <div class="flex items-center gap-1.5">
+        <div class="mt-2 grid grid-cols-2 gap-2 text-[10px] leading-3 text-[#777]">
+            <div class="flex min-w-0 items-center gap-1.5 rounded-xl border border-[#E5E7EB] bg-white px-2 py-1.5">
                 <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#242938] text-[11px] font-semibold text-white">M</span>
-                <span><strong class="block text-[#242938]">monobank</strong>{{ $rowsSelectorLabels['mono_label'] }}</span>
+                <span class="min-w-0"><strong class="block truncate text-[#242938]">monobank</strong><span class="block truncate">{{ $rowsSelectorLabels['mono_label'] }}</span><span class="block whitespace-nowrap">{{ $rowsSelectorLabels['installment_prefix'] }} <strong><span x-text="fmt(installmentPayment()).uah"></span> {{ $rowsSelectorLabels['currency'] }}/{{ $rowsSelectorLabels['per_month_short'] }}</strong></span></span>
             </div>
-            <div class="flex items-center gap-1.5">
+            <div class="flex min-w-0 items-center gap-1.5 rounded-xl border border-[#E5E7EB] bg-white px-2 py-1.5">
                 <svg class="h-7 w-7 shrink-0" viewBox="0 0 40 40" fill="none" aria-hidden="true">
                     <path d="M32.7059 32H20.6827C20.6827 31.029 20.6922 30.0756 20.6803 29.1211C20.6637 27.7979 20.4866 26.4969 20.0541 25.2395C19.075 22.3911 17.0156 20.7497 14.1114 20.0511C12.5999 19.6871 11.0611 19.6636 9.51867 19.6707C9.0279 19.673 8.53713 19.6707 8.03448 19.6707V8H32.7059V32ZM27.5986 27.0406V12.9771H13.1525V14.8521C20.3809 15.8595 24.6136 19.8421 25.6557 27.0417H27.5998L27.5986 27.0406Z" fill="#76AE42"/>
                     <path d="M8 31.9905V22.6246H17.649V31.9905H8Z" fill="black"/>
                 </svg>
-                <span><strong class="block text-[#242938]">ПриватБанк</strong>{{ $rowsSelectorLabels['privat_label'] }}</span>
+                <span class="min-w-0"><strong class="block truncate text-[#242938]">ПриватБанк</strong><span class="block truncate">{{ $rowsSelectorLabels['privat_label'] }}</span><span class="block whitespace-nowrap">{{ $rowsSelectorLabels['installment_prefix'] }} <strong><span x-text="fmt(installmentPayment()).uah"></span> {{ $rowsSelectorLabels['currency'] }}/{{ $rowsSelectorLabels['per_month_short'] }}</strong></span></span>
             </div>
         </div>
 
