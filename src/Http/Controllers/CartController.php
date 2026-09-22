@@ -51,24 +51,7 @@ public function page()
 {
     $locale = app()->getLocale();
     $info = $this->cart->info();
-    $cartProductIds = collect($info['items'] ?? [])
-        ->pluck('product_id')
-        ->filter()
-        ->map(fn ($id): int => (int) $id)
-        ->unique()
-        ->values()
-        ->all();
-
-    $relatedProducts = Product::withListingCardRelations()
-        ->active()
-        ->cardListingSelect()
-        ->MainProduct()
-        ->dontForget()
-        ->when($cartProductIds !== [], fn ($query) => $query->whereNotIn('bs_products.id', $cartProductIds))
-        ->orderBy('sort')
-        ->limit(3)
-        ->get();
-    $related = (new ProductCardPresenter($locale, null, true))->collection($relatedProducts);
+    $related = $this->cartRecommendations($info, $locale);
 
     return view(front_view('cart.index'), [
         'items' => $info['items'] ?? [],
@@ -77,6 +60,51 @@ public function page()
         'related' => $related,
     ]);
 }
+
+    /**
+     * HTML-фрагмент для обновления карусели после изменения корзины.
+     */
+    public function recommendations()
+    {
+        $locale = app()->getLocale();
+
+        return view(front_view('cart.partials.recommendations'), [
+            'products' => $this->cartRecommendations($this->cart->info(), $locale),
+            'recommendationsUrl' => $this->recommendationsUrl(),
+        ]);
+    }
+
+    private function cartRecommendations(array $cartInfo, string $locale)
+    {
+        $cartProductIds = collect($cartInfo['items'] ?? [])
+            ->pluck('product_id')
+            ->filter()
+            ->map(fn ($id): int => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        $products = Product::withListingCardRelations()
+            ->active()
+            ->cardListingSelect()
+            ->MainProduct()
+            ->dontForget()
+            ->when($cartProductIds !== [], fn ($query) => $query->whereNotIn('bs_products.id', $cartProductIds))
+            ->inRandomOrder()
+            ->limit(6)
+            ->get();
+
+        return (new ProductCardPresenter($locale, null, true))->collection($products);
+    }
+
+    private function recommendationsUrl(): string
+    {
+        $locale = request()->route('locale');
+
+        return $locale
+            ? route('localized.cart.recommendations', ['locale' => $locale])
+            : route('cart.recommendations');
+    }
 
 public function remove(Request $r)
 {

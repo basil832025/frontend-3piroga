@@ -27,6 +27,11 @@
             slidesPerView: 'auto',
             spaceBetween: 12,
             speed: 360,
+            loop: @js(count($products) > 3),
+            loopAdditionalSlides: 1,
+            // Для короткого списка rewind даёт тот же переход по кругу,
+            // но без служебных дубликатов слайдов, которые требуют >= 4 карточек.
+            rewind: @js(count($products) <= 3),
             watchOverflow: true,
             grabCursor: true,
             threshold: 4,

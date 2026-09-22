@@ -52,6 +52,42 @@ async function resolveCsrfToken() {
 
 /** Локальный компонент для списков/сайдбаров корзины (твоя версия, с правками удаления) */
 export default function registerCartActions(Alpine) {
+    let recommendationsRefreshTimer = null;
+
+    window.addEventListener('cart-updated', () => {
+        const target = document.querySelector('[data-cart-recommendations]');
+        const url = target?.dataset.cartRecommendationsUrl;
+
+        if (!target || !url) return;
+
+        window.clearTimeout(recommendationsRefreshTimer);
+        recommendationsRefreshTimer = window.setTimeout(async () => {
+            try {
+                const res = await fetch(url, {
+                    headers: {
+                        Accept: 'text/html',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    cache: 'no-store',
+                });
+
+                if (!res.ok) return;
+
+                const html = await res.text();
+                const nextTarget = new DOMParser()
+                    .parseFromString(html, 'text/html')
+                    .querySelector('[data-cart-recommendations]');
+
+                if (!nextTarget) return;
+
+                target.replaceWith(nextTarget);
+                Alpine.initTree(nextTarget);
+            } catch (e) {
+                console.error('cart.recommendations refresh error', e);
+            }
+        }, 150);
+    });
+
     Alpine.data('cartActions', (addUrl, removeUrl) => ({
         addUrl,
         removeUrl,

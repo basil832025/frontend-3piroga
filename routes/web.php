@@ -44,6 +44,10 @@ Route::get('/cart', [CartController::class, 'page'])
     ->name('cart.page')
     ->defaults('guest_stateless', true)
     ->withoutMiddleware([VerifyCsrfToken::class]);
+Route::get('/cart/recommendations', [CartController::class, 'recommendations'])
+    ->name('cart.recommendations')
+    ->defaults('guest_stateless', true)
+    ->withoutMiddleware([VerifyCsrfToken::class]);
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 Route::get('/checkout/availability', [CheckoutController::class, 'availability'])
     ->middleware(['auth', 'throttle:60,1'])

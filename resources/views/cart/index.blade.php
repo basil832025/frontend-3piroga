@@ -314,9 +314,11 @@
             </div>
         @endif
 
-        <x-pages.catalog.partials.recommendations
-            :title="st('cart.forgot_anything', 'Нічого не забули?')"
-            :products="$related ?? []"
-        />
+        @include(front_view('cart.partials.recommendations'), [
+            'products' => $related ?? [],
+            'recommendationsUrl' => $isLocalized
+                ? route('localized.cart.recommendations', ['locale' => $locale])
+                : route('cart.recommendations'),
+        ])
     </div>
 @endsection
