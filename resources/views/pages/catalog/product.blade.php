@@ -239,10 +239,16 @@
         <div class="mx-auto desk:w-[1198px] w-[357px] md:w-[736px] max-w-full">
 
             {{-- Хлебные крошки --}}
+            @php
+                $locale = app()->getLocale();
+                $localized = in_array($locale, ['ru', 'en'], true);
+                $categoryPath = ($localized ? '/' . $locale : '') . '/' . ltrim((string) ($category->slug ?? ''), '/');
+                $homeUrl = $localized ? route('localized.home', ['locale' => $locale]) : route('home');
+            @endphp
             <nav class="text-sm text-gray-500 my-4">
-                <a href="{{ route('home') }}" class="hover:text-gray-700">{{ st('menu.home','Головна') }}</a>
+                <a href="{{ $homeUrl }}" class="hover:text-gray-700">{{ st('menu.home','Головна') }}</a>
                 <span class="mx-2">→</span>
-                <a href="{{ url('/' . ($category->slug ?? '')) }}" class="hover:text-gray-700">
+                <a href="{{ url($categoryPath) }}" class="hover:text-gray-700">
                     {{ $category->title ?? $category->name ?? 'Категорія' }}
                 </a>
                 <span class="mx-2">→</span>
