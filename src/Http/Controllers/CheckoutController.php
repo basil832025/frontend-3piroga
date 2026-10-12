@@ -1405,7 +1405,12 @@ public function submit(Request $request)
         'delivery_mode'    => 'required|in:asap,fixed',
         'delivery_time'    => 'nullable|string|max:20',
 
-        'payment_method'   => 'required|in:liqpay,card_on_delivery,cash,invoice,payparts',
+        'payment_method'   => [
+            'required',
+            \Illuminate\Validation\Rule::in($request->input('shipping_method') === 'pickup'
+                ? ['liqpay', 'card_on_delivery', 'cash', 'invoice', 'payparts']
+                : ['liqpay', 'cash', 'invoice', 'payparts']),
+        ],
 
         'agree'            => 'accepted',
     ]);

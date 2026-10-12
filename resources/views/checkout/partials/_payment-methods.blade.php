@@ -60,8 +60,8 @@
             {{ st('cart.payment.liqpay_note', 'Переадресуємо на захищену сторінку LiqPay. Ми не обробляємо дані вашої картки.') }}
         </p>
 
-        <label class="flex items-center gap-3 cursor-pointer">
-            <input type="radio" name="payment_method" value="card_on_delivery" class="tp-radio" x-model="paymentMethod" @checked($paymentMethod === 'card_on_delivery')>
+        <label class="flex items-center gap-3 cursor-pointer" x-show="method === 'pickup'" x-cloak>
+            <input type="radio" name="payment_method" value="card_on_delivery" class="tp-radio" x-model="paymentMethod" :disabled="method !== 'pickup'" @checked($paymentMethod === 'card_on_delivery')>
             <span class="flex items-center gap-3 text-[16px] leading-[22px] text-[#272828]">
                 <span class="text-[#FF7500]" aria-hidden="true">
                     <svg width="21" height="17" viewBox="0 0 21 17" fill="none" xmlns="http://www.w3.org/2000/svg">

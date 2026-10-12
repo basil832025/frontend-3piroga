@@ -76,6 +76,14 @@ document.addEventListener('alpine:init', () => {
             });
         },
         init() {
+            const syncPaymentMethod = () => {
+                if (this.method !== 'pickup' && this.paymentMethod === 'card_on_delivery') {
+                    this.paymentMethod = 'liqpay';
+                }
+            };
+            syncPaymentMethod();
+            this.$watch('method', syncPaymentMethod);
+
             window.addEventListener('open-payparts-terms', (event) => {
                 const detail = event?.detail || {};
                 this.paypartsTermsTitle = detail.title || '';
