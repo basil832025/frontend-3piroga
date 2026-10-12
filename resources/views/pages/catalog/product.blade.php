@@ -513,15 +513,15 @@
                             $ingredientsSource = (string) ($product['description'] ?? '');
                         }
 
-                        $ingredientsText = preg_replace('/\s+/u', ' ', strip_tags($ingredientsSource));
-                        $ingredientsText = trim((string) $ingredientsText);
+                        $ingredientsHtml = (string) str($ingredientsSource)->sanitizeHtml();
+                        $ingredientsText = trim(strip_tags($ingredientsHtml));
 
                     @endphp
                     @if($ingredientsText !== '')
                         <div class="mt-6">
                             <div class="text-[#666666] text-lg font-semibold mb-2">{{ st('product.ingredients','Склад') }}:</div>
                             <div class="prose prose-sm max-w-none text-base text-[#A9A9A9]">
-                                {{ $ingredientsText }}
+                                {!! $ingredientsHtml !!}
                             </div>
                         </div>
                     @endif
