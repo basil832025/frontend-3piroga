@@ -71,7 +71,6 @@
         $productIdMap = [];
         $metaMap = [];
         $productKeyMap = [];
-        $articleMap = [];
         $badgeMap = [];
         $manualDiscountMap = [];
         foreach ($rows as $row) {
@@ -86,7 +85,6 @@
             $manualDiscountMap[$rowKey] = isset($row['manual_discount_percent']) && $row['manual_discount_percent'] !== null && $row['manual_discount_percent'] !== ''
                 ? round((float) $row['manual_discount_percent'])
                 : null;
-            $articleMap[$rowKey] = trim((string)($row['article'] ?? ''));
 
             $badgeMap[$rowKey] = [
                 'is_spicy' => (bool)($row['is_spicy'] ?? false),
@@ -136,7 +134,6 @@
                 productIds: @js($productIdMap),
                 metas: @js($metaMap),
                 productKeys: @js($productKeyMap),
-                articles: @js($articleMap),
                 badges: @js($badgeMap),
                 manualDiscounts: @js($manualDiscountMap),
                 discountLabel: @js($discountLabel),
@@ -162,8 +159,6 @@
                     return itemVolume === selectedVolume;
                 },
                 article(){
-                    const value = this.articles[this.selected];
-                    if (typeof value === 'string' && value.trim() !== '') return value;
                     return this.defaultArticle;
                 },
                 productKey(){
