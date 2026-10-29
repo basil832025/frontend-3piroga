@@ -183,7 +183,6 @@
                                 </svg>
                                 <span class="whitespace-nowrap leading-none">Viber</span>
                             </a>
-                            {{-- WhatsApp temporarily disabled.
 
                             <a href="https://wa.me/380660784333" target="_blank" rel="noopener noreferrer" class="flex h-9 w-full min-w-0 items-center justify-center gap-1 rounded-2xl border border-[#E0E0E0] px-1 text-[10px] font-semibold text-[#272828] transition-colors hover:border-[#25D366]" aria-label="Написати у WhatsApp">
                                 <svg class="h-5 w-5 shrink-0" viewBox="0 0 48 48" aria-hidden="true">
@@ -193,7 +192,6 @@
                                 </svg>
                                 <span class="whitespace-nowrap leading-none">WhatsApp</span>
                             </a>
-                            --}}
                         </div>
                     </div>
 
