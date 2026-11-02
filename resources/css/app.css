@@ -714,3 +714,38 @@ img.p_loy_c {
     opacity: 1;
     transform: scale(1);
 }
+
+/* Mobile header contacts: native dialog keeps focus inside and restores it on close. */
+.mobile-contact-trigger { display:none; }
+.mobile-contact-dialog { width:calc(100% - 32px); max-width:420px; max-height:calc(100dvh - 40px); margin:auto; padding:20px 16px 16px; border:0; border-radius:20px; background:#fff; color:#19191a; box-shadow:0 12px 40px #0004; overflow-y:auto; }
+.mobile-contact-dialog::backdrop { background:rgb(0 0 0 / 40%); }
+html:has(.mobile-contact-dialog[open]) { overflow:hidden; }
+.mobile-contact-close { position:absolute; right:12px; top:8px; width:36px; height:36px; font-size:32px; line-height:1; color:#555; }
+.mobile-contact-heading { display:flex; align-items:center; gap:12px; padding-right:24px; margin-bottom:16px; }
+.mobile-contact-badge { display:flex; align-items:center; justify-content:center; width:48px; height:48px; flex-shrink:0; border-radius:15px; background:#fff0e4; color:#ff7500; }
+.mobile-contact-badge svg { width:32px; height:32px; }
+.mobile-contact-heading h2 { font-size:20px; font-weight:700; line-height:1.2; }
+.mobile-contact-heading p { margin-top:4px; font-size:13px; line-height:1.4; }
+.mobile-contact-phones { display:grid; gap:8px; }
+.mobile-contact-phones a { display:flex; align-items:center; gap:10px; border:1px solid #e0e0e0; border-radius:13px; padding:8px 10px; font-size:clamp(16px,5vw,22px); font-weight:700; white-space:nowrap; }
+.mobile-contact-phones svg { width:24px; height:24px; flex-shrink:0; color:#ff7500; }
+.mobile-contact-call { margin-left:auto; display:flex; padding:5px 8px; border:1px solid #ffb780; border-radius:10px; background:#fff8f1; }
+.mobile-contact-call svg { width:20px; height:20px; }
+.mobile-contact-messengers > div { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin-top:12px; }
+.mobile-contact-messengers a { justify-content:center; gap:4px; padding:7px 3px; border-radius:9px; font-size:12px; }
+.mobile-contact-messengers svg { width:22px; height:22px; }
+.mobile-contact-messengers a:nth-child(1) { border-color:#2aabee; background:#f0faff; order:3; }
+.mobile-contact-messengers a:nth-child(2) { border-color:#665cac; background:#f5f1ff; order:1; }
+.mobile-contact-messengers a:nth-child(3) { border-color:#25d366; background:#f0fff3; order:2; }
+.mobile-contact-dialog a:focus-visible, .mobile-contact-dialog button:focus-visible, .mobile-contact-trigger:focus-visible { outline:2px solid #ff7500; outline-offset:3px; }
+@media (max-width:767px) {
+    .mobile-header-logo { width:96px; height:auto; }
+    .mobile-contact-trigger { display:inline-flex; align-items:center; justify-content:center; width:28px; height:30px; flex-shrink:0; border-radius:9px; background:#ff7500; color:white; }
+    .mobile-contact-trigger svg { width:21px; height:21px; }
+}
+@media (max-width:359px) {
+    .mobile-header-logo { width:76px; }
+    #site-header > div { padding-left:8px; padding-right:8px; }
+    .mobile-contact-messengers a { font-size:10px; gap:3px; }
+    .mobile-contact-messengers svg { width:18px; height:18px; }
+}

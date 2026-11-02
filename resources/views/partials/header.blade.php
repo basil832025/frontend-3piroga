@@ -1,3 +1,10 @@
+@php
+    $contactLabels = [
+        'title' => st('header.contacts.title', 'Наші телефони'),
+        'hint' => st('header.contacts.hint', 'Телефонуйте, допоможемо із замовленням'),
+        'close' => st('header.contacts.close', 'Закрити'),
+    ];
+@endphp
 <header id="site-header" class="sticky top-0 z-[60] w-full bg-white">
     <div class="mx-auto w-full desk:w-[1343px] px-4 md:px-6">
     <div
@@ -8,7 +15,7 @@
     >
         <div class="flex items-center justify-between min-h-[68px]" @click.outside="$store.search.open = false">
             {{-- ЛЕВЫЙ МИНИ-БЛОК: бургер + логотип + телефон + язык --}}
-            <div class="flex items-center md:gap-5 desk:gap-8 gap-4">
+            <div class="flex items-center md:gap-5 desk:gap-8 gap-2">
                 {{-- burger --}}
                 <button type="button"
                         x-data
@@ -24,7 +31,7 @@
                         <source media="(min-width: 1250px)" srcset="{{ asset('vendor/frontend-3piroga/images/logo.svg') }}">
                         <source media="(min-width: 768px)" srcset="{{ asset('vendor/frontend-3piroga/images/logo_m.svg') }}">
                         <img src="{{ asset('vendor/frontend-3piroga/images/logo_m.svg') }}" alt="Три Пироги" decoding="async"
-                             class="shrink-0 flex-none basis-[52px] md:basis-[57px] max-w-none object-contain" fetchpriority="high">
+                             class="mobile-header-logo shrink-0 flex-none basis-[52px] md:basis-[57px] max-w-none object-contain" fetchpriority="high">
                     </picture>
                 </a>
 
@@ -32,7 +39,7 @@
                 @php
                     $headerPhonePrimary = $headerPhonePrimary ?? null;
                     $headerPhones = $headerPhones ?? config('phones.list', []);
-                    $phones = is_array($headerPhones) ? $headerPhones : [];
+                    $phones = collect($headerPhones)->all();
                     $activePhone = is_array($headerPhonePrimary)
                         ? ($headerPhonePrimary['display'] ?? $headerPhonePrimary['tel'] ?? config('phones.default'))
                         : ($headerPhonePrimary ?: config('phones.default'));
@@ -48,10 +55,9 @@
                         class="inline-flex items-center gap-2.5 h-10 px-3 rounded-lg ring-1 ring-black/10 hover:bg-gray-50 cursor-pointer select-none
                         [&::-webkit-details-marker]:hidden">
                         <svg class="hidden lg:block w-5 h-5 text-gray-700" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8c1.9 3.6 4.9 6.5 8.5 8.5l2.8-2.8c.3-.3.7-.4 1.1-.3 1.2.4 2.4.6 3.7.6.6 0 1 .4 1 .9V22c0 .6-.4 1-1 1C10.1 23 1 13.9 1 2c0-.6.4-1 1-1h4.3c.6 0 .9.4.9 1 0 1.3.2 2.5.6 3.7.1.4 0 .8-.3 1.1L6.6 10.8z"/></svg>
-                        <a href="{{ $telHref($activePhone) }}"
-                           class="text-sm leading-none font-medium text-gray-900 whitespace-nowrap hover:text-orange-600">
+                        <span class="text-sm leading-none font-medium text-gray-900 whitespace-nowrap">
                             {{ $activePhone }}
-                        </a>
+                        </span>
                         <svg width="14" height="8" class="w-4 h-4 text-gray-600 transition-transform group-open:rotate-180" viewBox="0 0 14 8" aria-hidden="true" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M1.30232 1.5L5.89549 6.09317C6.43793 6.63561 7.32557 6.63561 7.86801 6.09317L12.4612 1.5" stroke="#19191A" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
@@ -65,7 +71,7 @@
                                         : ['display' => (string) $phone, 'tel' => (string) $phone];
                                 @endphp
                                 <li>
-                                    <a href="{{ $telHref($phone['display'] ?? $phone['tel'] ?? '') }}" class="flex items-center justify-between gap-2 px-3 py-2 rounded-lg hover:bg-gray-50">
+                                    <a href="{{ $telHref($phone['tel'] ?? $phone['display'] ?? '') }}" class="flex items-center justify-between gap-2 px-3 py-2 rounded-lg hover:bg-gray-50">
                                         <span class="text-sm">{{ $phone['display'] ?? $phone['tel'] ?? '' }}</span>
                                         @if($headerPhonePrimary && ($phone['tel'] ?? '') === ($headerPhonePrimary['tel'] ?? ''))
                                             <span class="text-[#FF7500] text-xs">{{ st('header.phone.main','основний') }}</span>
@@ -157,7 +163,13 @@
             </div>
 
             {{-- ПРАВО: иконки --}}
-            <div class="flex items-center gap-3 md:gap-[20px] shrink-0">
+            <div class="flex items-center gap-2 md:gap-[20px] shrink-0">
+                <button type="button" class="mobile-contact-trigger" x-data
+                        @click="$store.search.open = false; document.getElementById('mobile-contact-dialog').showModal()"
+                        aria-haspopup="dialog" aria-controls="mobile-contact-dialog" aria-label="{{ $contactLabels['title'] }}">
+                    @include(front_view('partials.contact-phone-icon'))
+                </button>
+
                 <a
                     href="{{ $deliveryUrl }}"
                     class="group relative inline-flex items-center justify-center w-6 h-6 shrink-0 text-[#19191A] hover:text-[#FF7500]"
@@ -256,6 +268,7 @@
 
 
 </header>
+@include(front_view('partials.mobile-contacts'))
 {{-- Меню --}}
 @include(front_view('partials.menu'))
 
