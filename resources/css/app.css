@@ -739,13 +739,17 @@ html:has(.mobile-contact-dialog[open]) { overflow:hidden; }
 .mobile-contact-messengers a:nth-child(3) { border-color:#25d366; background:#f0fff3; order:2; }
 .mobile-contact-dialog a:focus-visible, .mobile-contact-dialog button:focus-visible, .mobile-contact-trigger:focus-visible { outline:2px solid #ff7500; outline-offset:3px; }
 @media (max-width:767px) {
-    .mobile-header-logo { width:96px; height:auto; }
+    .mobile-header-logo { width:108px; height:auto; }
     .mobile-contact-trigger { display:inline-flex; align-items:center; justify-content:center; width:28px; height:30px; flex-shrink:0; border-radius:9px; background:#ff7500; color:white; }
     .mobile-contact-trigger svg { width:21px; height:21px; }
 }
 @media (max-width:359px) {
-    .mobile-header-logo { width:76px; }
+    .mobile-header-logo { width:84px; }
     #site-header > div { padding-left:8px; padding-right:8px; }
     .mobile-contact-messengers a { font-size:10px; gap:3px; }
     .mobile-contact-messengers svg { width:18px; height:18px; }
+}
+
+@media (min-width:390px) and (max-width:767px) {
+    .mobile-header-logo { width:124px; }
 }
