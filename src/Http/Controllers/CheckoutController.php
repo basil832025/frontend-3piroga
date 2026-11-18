@@ -445,6 +445,13 @@ private function composeCheckoutDeliveryMoment(?string $deliveryDate, ?string $d
     return $date->copy()->setTime($hours, $minutes);
 }
 
+private function checkoutPromoMoment(string $deliveryMode, ?string $deliveryDate, ?string $deliveryTime): ?Carbon
+{
+    return $deliveryMode === 'fixed'
+        ? $this->composeCheckoutDeliveryMoment($deliveryDate, $deliveryTime)
+        : now('Europe/Kyiv');
+}
+
 private function checkoutDeliveryMomentError(?string $deliveryDate, ?string $deliveryTime): ?string
 {
     $moment = $this->composeCheckoutDeliveryMoment($deliveryDate, $deliveryTime);
@@ -813,6 +820,7 @@ public function saveFormData(Request $request)
             $deliveryDate = $mergedData['delivery_date'] ?? null;
             $deliveryTimeRaw = $mergedData['delivery_time'] ?? null;
             $deliveryTime = $this->normalizeCheckoutDeliveryTime($deliveryTimeRaw);
+            $promoMoment = $this->checkoutPromoMoment($deliveryMode, $deliveryDate, $deliveryTime);
 
             // Обновляем дату доставки
             if ($deliveryMode === 'fixed' && $deliveryDate) {
@@ -915,7 +923,7 @@ public function saveFormData(Request $request)
                 if ($kind === 'fixed') {
                     $pricing->applyFixedExclusive($order, $id, 'single');
                 } elseif ($kind === 'time') {
-                    $pricing->applyTimeExclusive($order, $id, 'single');
+                    $pricing->applyTimeExclusive($order, $promoMoment ? $id : null, 'single', $promoMoment);
                 } else {
                     $pricing->recalc($order);
                 }
@@ -940,7 +948,7 @@ public function saveFormData(Request $request)
                         $order->loadMissing(['items.product.attributeValues']);
                     }
 
-                    $couponAmount = (float) $pricing->calculateCouponAmountWithSelectedPromo($order, $coupon, $selection);
+                    $couponAmount = (float) $pricing->calculateCouponAmountWithSelectedPromo($order, $coupon, $promoMoment || !str_starts_with($selection, 'time:') ? $selection : null, $promoMoment);
                     if ($couponAmount < 0) {
                         OrderAdjustment::create([
                             'shop_order_id' => $order->id,
@@ -1033,6 +1041,14 @@ public function updatePromo(Request $request)
         ]);
     }
 
+    $sessionData = session('checkout.form_data', []);
+    $deliveryMode = $request->input('delivery_mode', $sessionData['delivery_mode'] ?? 'asap');
+    $promoMoment = $this->checkoutPromoMoment(
+        $deliveryMode,
+        $request->input('delivery_date', $sessionData['delivery_date'] ?? null),
+        $request->input('delivery_time', $sessionData['delivery_time'] ?? null)
+    );
+
     // 2) Применяем выбранную акцию ЕДИНОЙ логикой (как в админке)
     $pricing = app(\App\Services\OrderPricing::class);
 
@@ -1046,15 +1062,13 @@ public function updatePromo(Request $request)
         if ($kind === 'fixed') {
             $pricing->applyFixedExclusive($order, $id, 'single');
         } elseif ($kind === 'time') {
-            $pricing->applyTimeExclusive($order, $id, 'single');
+            $pricing->applyTimeExclusive($order, $promoMoment ? $id : null, 'single', $promoMoment);
         } else {
             $pricing->recalc($order);
         }
     } else {
         $pricing->recalc($order);
     }
-
-    $sessionData = session('checkout.form_data', []);
 
     $shippingMethod = (string) $request->input('shipping_method', $sessionData['shipping_method'] ?? ($order->self_pickup ? 'pickup' : 'delivery'));
     if (! in_array($shippingMethod, ['delivery', 'pickup'], true)) {
@@ -1088,7 +1102,7 @@ public function updatePromo(Request $request)
                 $order->loadMissing(['items.product.attributeValues']);
             }
 
-            $couponAmount = (float) $pricing->calculateCouponAmountWithSelectedPromo($order, $coupon, $selection);
+            $couponAmount = (float) $pricing->calculateCouponAmountWithSelectedPromo($order, $coupon, $promoMoment || !str_starts_with($selection, 'time:') ? $selection : null, $promoMoment);
             if ($couponAmount < 0) {
                 OrderAdjustment::create([
                     'shop_order_id' => $order->id,
@@ -1558,6 +1572,7 @@ public function submit(Request $request)
     $deliveryDate   = $request->input('delivery_date');
     $deliveryTimeRaw = $request->input('delivery_time'); // Диапазон типа "12:00-12:15"
     $deliveryTime = $this->normalizeCheckoutDeliveryTime($deliveryTimeRaw);
+    $promoMoment = $this->checkoutPromoMoment($deliveryMode, $deliveryDate, $deliveryTime);
 
     // Валидация даты и времени для режима "fixed" уже выполнена выше
 
@@ -1742,7 +1757,7 @@ public function submit(Request $request)
         if ($kind === 'fixed') {
             $pricing->applyFixedExclusive($order, $id, 'single');
         } elseif ($kind === 'time') {
-            $pricing->applyTimeExclusive($order, $id, 'single');
+            $pricing->applyTimeExclusive($order, $promoMoment ? $id : null, 'single', $promoMoment);
         } else {
             $pricing->recalc($order);
         }
@@ -1769,7 +1784,7 @@ public function submit(Request $request)
                 }
 
                 // считаем только дополнительную выгоду купона сверх выбранной акции
-                $amount = (float) $pricing->calculateCouponAmountWithSelectedPromo($order, $promo, $selection); // отрицательное число
+                $amount = (float) $pricing->calculateCouponAmountWithSelectedPromo($order, $promo, $promoMoment || !str_starts_with($selection, 'time:') ? $selection : null, $promoMoment); // отрицательное число
 
                 if ($amount < 0) {
                     $discount = abs($amount);
@@ -2788,47 +2803,9 @@ private function checkPromoConditions(
         }
     }
 
-    // 3. Проверка дня недели и времени
-    $now = now();
-    $referenceDate = $now;
-    $referenceTime = $now->format('H:i:s');
-    $referenceWeekday = (int) $now->isoWeekday(); // 1-7 (Mon-Sun)
+    $moment = $this->checkoutPromoMoment($deliveryMode, $deliveryDate, $deliveryTime);
 
-    // Если выбрана конкретная дата доставки
-    if ($deliveryDate) {
-        try {
-            $referenceDate = Carbon::parse($deliveryDate);
-            $referenceWeekday = (int) $referenceDate->isoWeekday();
-        } catch (\Exception $e) {
-            // Если не удалось распарсить дату, используем текущую
-        }
-    }
-
-    // Если выбрано конкретное время доставки
-    if ($deliveryTime) {
-        // Формат может быть "12:00" или "12:00-12:15"
-        $timeParts = explode('-', $deliveryTime);
-        $timeStr = trim($timeParts[0]);
-        if (preg_match('/^(\d{1,2}):(\d{2})$/', $timeStr, $matches)) {
-            $referenceTime = sprintf('%02d:%02d:00', (int)$matches[1], (int)$matches[2]);
-        }
-    } elseif ($deliveryMode === 'asap') {
-        // Если "как можно скорее", используем текущее время
-        $referenceTime = $now->format('H:i:s');
-    }
-
-    // Проверка дня недели
-    $days = $discount->days ?? [];
-    if (!empty($days) && !in_array($referenceWeekday, $days, true)) {
-        return false;
-    }
-
-    // Проверка временного окна
-    if (!$discount->matchesTimeWindow($referenceTime)) {
-        return false;
-    }
-
-    return true;
+    return $moment !== null && $discount->canApplyNow($moment);
 }
 
 /**

@@ -729,6 +729,9 @@ window.availablePromosComponent = function (initialSelected) {
 
         init() {
             window.addEventListener('checkout-shipping-method-changed', () => this.apply());
+            window.addEventListener('update-promo-status', () => {
+                if (this.selected.startsWith('time:')) this.apply();
+            });
         },
 
         change(value) {
@@ -738,6 +741,8 @@ window.availablePromosComponent = function (initialSelected) {
 
         apply() {
             const seq = ++this.requestSeq;
+            const form = document.querySelector('[data-checkout-form]');
+            const delivery = form ? new FormData(form) : null;
 
             fetch('/checkout/promo', {
                 method: 'POST',
@@ -748,6 +753,9 @@ window.availablePromosComponent = function (initialSelected) {
                 },
                 body: JSON.stringify({
                     promo: this.selected,
+                    delivery_mode: delivery?.get('delivery_mode') ?? undefined,
+                    delivery_date: delivery?.get('delivery_date') ?? undefined,
+                    delivery_time: delivery?.get('delivery_time') ?? undefined,
                     coupon: getAppliedCouponCode(),
                     shipping_method: getShippingMethodValue(document),
                 }),

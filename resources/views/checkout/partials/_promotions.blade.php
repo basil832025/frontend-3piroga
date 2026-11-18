@@ -189,6 +189,9 @@
 
                 init() {
                     window.addEventListener('checkout-shipping-method-changed', () => this.apply());
+                    window.addEventListener('update-promo-status', () => {
+                        if (this.selected.startsWith('time:')) this.apply();
+                    });
                 },
 
                 change(value) {
@@ -198,6 +201,8 @@
 
                 apply() {
                     const seq = ++this.requestSeq;
+                    const form = document.querySelector('[data-checkout-form]');
+                    const delivery = form ? new FormData(form) : null;
 
                     fetch('{{ $promoUrl }}', {
                         method: 'POST',
@@ -208,6 +213,9 @@
                         },
                         body: JSON.stringify({
                                 promo: this.selected,
+                                delivery_mode: delivery?.get('delivery_mode') ?? undefined,
+                                delivery_date: delivery?.get('delivery_date') ?? undefined,
+                                delivery_time: delivery?.get('delivery_time') ?? undefined,
                                 coupon: String(window.checkoutAppliedCouponCode || document.querySelector('[name="coupon_applied"]')?.value || document.querySelector('[name="coupon"]')?.value || '').trim(),
                                 shipping_method: String(document.querySelector('input[name="shipping_method"]:checked')?.value || document.querySelector('[name="shipping_method"]')?.value || '').trim(),
                             }),
